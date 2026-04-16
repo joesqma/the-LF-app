@@ -51,7 +51,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
-            CubeCoach AI
+            Cubewise
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Your personal AI speedcubing coach

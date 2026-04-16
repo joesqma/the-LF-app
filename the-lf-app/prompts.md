@@ -1,4 +1,4 @@
-# CubeCoach AI — Implementation Blueprint & LLM Prompts
+# Cubewise — Implementation Blueprint & LLM Prompts
 
 ---
 
@@ -241,7 +241,7 @@ Each prompt below is self-contained, references what was built in the previous s
 ### PROMPT 1 — Project Initialisation & Folder Structure
 
 ```
-You are building a Next.js 14 web application called CubeCoach AI — an AI-powered speedcubing coaching platform. Use the App Router, TypeScript, and Tailwind CSS.
+You are building a Next.js 14 web application called Cubewise — an AI-powered speedcubing coaching platform. Use the App Router, TypeScript, and Tailwind CSS.
 
 Your task is step 1A: project initialisation.
 
@@ -294,7 +294,7 @@ Do not build any UI beyond what is needed. No placeholder pages yet.
 ### PROMPT 2 — Database Schema & Migrations
 
 ```
-Continuing CubeCoach AI. The Next.js project is scaffolded with Supabase clients set up.
+Continuing Cubewise. The Next.js project is scaffolded with Supabase clients set up.
 
 Your task is step 1B: define the full database schema.
 
@@ -394,13 +394,13 @@ After writing the migration, update /src/types/database.ts with the full TypeScr
 ### PROMPT 3 — Authentication
 
 ```
-Continuing CubeCoach AI. Database schema is defined, Supabase clients exist.
+Continuing Cubewise. Database schema is defined, Supabase clients exist.
 
 Your task is step 1C: implement Google OAuth authentication.
 
 1. Create /src/app/login/page.tsx:
    - Clean centred card UI
-   - App name "CubeCoach AI" as heading
+   - App name "Cubewise" as heading
    - Tagline: "Your personal AI speedcubing coach"
    - A single "Continue with Google" button using lucide-react's Chrome icon
    - On click, calls supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: '/auth/callback' } })
@@ -433,7 +433,7 @@ Wire up: confirm that visiting any route while unauthenticated redirects to /log
 ### PROMPT 4 — Global Layout & Navigation Shell
 
 ```
-Continuing CubeCoach AI. Auth is working. Users land on /dashboard after login.
+Continuing Cubewise. Auth is working. Users land on /dashboard after login.
 
 Your task is step 1D: build the global layout and navigation.
 
@@ -489,7 +489,7 @@ Wire up: all nav links should navigate correctly. The active state should reflec
 ### PROMPT 5 — Onboarding Flow
 
 ```
-Continuing CubeCoach AI. Layout and auth are complete.
+Continuing Cubewise. Layout and auth are complete.
 
 Your task is steps 2B–2C: build the onboarding questionnaire flow.
 
@@ -538,7 +538,7 @@ Wire up: new users should always hit onboarding before the dashboard. Existing u
 ### PROMPT 6 — Profile Page & WCA Integration
 
 ```
-Continuing CubeCoach AI. Onboarding is complete and saves to user_profiles.
+Continuing Cubewise. Onboarding is complete and saves to user_profiles.
 
 Your task is step 2D: build the profile page with WCA linking.
 
@@ -587,7 +587,7 @@ Wire up: all changes must persist immediately. WCA data must display after linki
 ### PROMPT 7 — Timer Core
 
 ```
-Continuing CubeCoach AI. Profile page is complete.
+Continuing Cubewise. Profile page is complete.
 
 Your task is step 3A–3B: build the core timer with scramble generation.
 
@@ -628,12 +628,14 @@ The timer is the most performance-sensitive part of the app. No async operations
 Wire up: the timer should be fully functional as a standalone stop watch with scrambles before any DB integration.
 ```
 
+
+
 ---
 
 ### PROMPT 8 — Timer Sessions & Solve Storage
 
 ```
-Continuing CubeCoach AI. Timer core is working with scramble generation.
+Continuing Cubewise. Timer core is working with scramble generation.
 
 Your task is steps 3C–3D: add session management and solve persistence.
 
@@ -684,7 +686,7 @@ Wire up: a complete solve cycle — time a solve, see it appear in the list, sta
 ### PROMPT 9 — Timer: cstimer Import & Solve Actions
 
 ```
-Continuing CubeCoach AI. Timer with sessions and solve storage is working.
+Continuing Cubewise. Timer with sessions and solve storage is working.
 
 Your task is steps 3E–3F: cstimer import and solve management actions.
 
@@ -730,7 +732,7 @@ Wire up: import a real cstimer JSON file and verify sessions appear correctly wi
 ### PROMPT 10 — Learn Section: Structure & CFOP Track
 
 ```
-Continuing CubeCoach AI. Timer is fully working.
+Continuing Cubewise. Timer is fully working.
 
 Your task is steps 4A–4B: build the Learn section structure and the CFOP track.
 
@@ -794,7 +796,7 @@ Wire up: the full CFOP track should be navigable, lesson completion should persi
 ### PROMPT 11 — Learn Section: Roux, Comp Prep & Save to Library
 
 ```
-Continuing CubeCoach AI. CFOP track is complete and wired.
+Continuing Cubewise. CFOP track is complete and wired.
 
 Your task is steps 4C–4E: Roux track, Competition Prep track, and Save to Library.
 
@@ -836,7 +838,7 @@ Wire up: saving a video from any lesson detail page should persist to the bookma
 ### PROMPT 12 — Analysis: Video Upload Pipeline
 
 ```
-Continuing CubeCoach AI. Learn section is complete.
+Continuing Cubewise. Learn section is complete.
 
 Your task is steps 5A–5B: set up video storage and build the upload UI.
 
@@ -882,7 +884,7 @@ Wire up: upload a video, confirm it appears in Supabase Storage, confirm the pen
 ### PROMPT 13 — Analysis: Gemini Integration & Report UI
 
 ```
-Continuing CubeCoach AI. Video upload creates a pending analysis row and redirects to /analysis/{id}.
+Continuing Cubewise. Video upload creates a pending analysis row and redirects to /analysis/{id}.
 
 Your task is steps 5C–5D: send the video to Gemini and render the structured report.
 
@@ -963,7 +965,7 @@ Wire up: full flow — upload video → Gemini analyses → report renders with 
 ### PROMPT 14 — Analysis: Claude Chat Integration
 
 ```
-Continuing CubeCoach AI. Analysis reports render correctly.
+Continuing Cubewise. Analysis reports render correctly.
 
 Your task is step 5E: add the Claude-powered coaching chat to analysis reports.
 
@@ -1003,7 +1005,7 @@ Wire up: open a completed analysis, click "Chat with your coach", ask a follow-u
 ### PROMPT 15 — Analysis History & Library Page
 
 ```
-Continuing CubeCoach AI. Analysis with chat is working.
+Continuing Cubewise. Analysis with chat is working.
 
 Your task is steps 5F and 6D: build the analysis history page and the library page.
 
@@ -1047,7 +1049,7 @@ Wire up: bookmarks saved from lesson pages should appear in the library. Filters
 ### PROMPT 16 — Gamification: XP & Badges
 
 ```
-Continuing CubeCoach AI. All core features are built.
+Continuing Cubewise. All core features are built.
 
 Your task is steps 6A–6C: implement the XP and badge system.
 
@@ -1102,7 +1104,7 @@ Wire up: log a solve and verify XP increments. Complete a lesson and verify badg
 ### PROMPT 17 — Dashboard & Free Tier Gating
 
 ```
-Continuing CubeCoach AI. Gamification is wired to all actions.
+Continuing Cubewise. Gamification is wired to all actions.
 
 Your task is steps 6E–6F: build the final dashboard and implement free tier limits.
 
@@ -1169,7 +1171,7 @@ Wire up: visit the dashboard as a new user — should see recommendation and the
 ### PROMPT 18 — Final Integration, Polish & QA Fixes
 
 ```
-Continuing CubeCoach AI. All features are built and wired.
+Continuing Cubewise. All features are built and wired.
 
 Your task is the final integration pass: connect any remaining loose ends, add loading/error states throughout, and prepare the app for handoff.
 
@@ -1198,7 +1200,7 @@ Your task is the final integration pass: connect any remaining loose ends, add l
    - All grid layouts should stack to single column on mobile
 
 6. SEO & metadata:
-   - Add metadata exports to each page: title (e.g., "Timer | CubeCoach AI"), description
+   - Add metadata exports to each page: title (e.g., "Timer | Cubewise"), description
    - Add a favicon (cube emoji as SVG or a simple icon)
    - Add /public/og-image.png (simple branded card for Open Graph)
 

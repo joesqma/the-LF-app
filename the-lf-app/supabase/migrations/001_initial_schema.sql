@@ -1,4 +1,4 @@
--- Initial schema for CubeCoach AI
+-- Initial schema for Cubewise
 -- Creates all core tables, RLS policies, auth trigger, and storage bucket
 
 -- uuid_generate_v4() is unavailable in newer Supabase projects where uuid-ossp

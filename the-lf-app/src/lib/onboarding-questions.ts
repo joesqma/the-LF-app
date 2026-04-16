@@ -1,4 +1,5 @@
 export interface OnboardingAnswers {
+  name?: string;
   canSolve?: string;
   currentAverage?: string;
   primaryGoal?: string;
@@ -8,11 +9,19 @@ export interface OnboardingAnswers {
 export interface Question {
   id: keyof OnboardingAnswers;
   text: string;
-  options: string[];
+  type?: "options" | "text";
+  options?: string[];
+  placeholder?: string;
   showIf?: (answers: OnboardingAnswers) => boolean;
 }
 
 export const QUESTIONS: Question[] = [
+  {
+    id: "name",
+    text: "What should we call you?",
+    type: "text",
+    placeholder: "Your name",
+  },
   {
     id: "canSolve",
     text: "Can you solve a Rubik's Cube?",

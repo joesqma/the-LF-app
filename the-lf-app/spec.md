@@ -29,7 +29,7 @@
 
 ## 1. Product Overview
 
-**Product Name:** CubeCoach AI (working title)
+**Product Name:** Cubewise (working title)
 
 An AI-powered speedcubing coaching web application that combines structured learning courses, a built-in solve timer, and video analysis to provide personalised coaching feedback. The core differentiator is AI feedback that feels tailored to the individual solver, not generic advice.
 

@@ -29,6 +29,7 @@ export async function saveOnboardingAnswers(
 
   const upsert: ProfileUpsert = {
     id: user.id,
+    display_name: answers.name ?? null,
     knows_how_to_solve: answers.canSolve === "Yes",
     current_average: answers.currentAverage ?? null,
     primary_goal: answers.primaryGoal,
