@@ -273,6 +273,41 @@ export type Database = {
           },
         ];
       };
+      saved_scrambles: {
+        Row: {
+          id: string;
+          user_id: string;
+          scramble: string;
+          puzzle: string;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          scramble: string;
+          puzzle?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          scramble?: string;
+          puzzle?: string;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "saved_scrambles_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "user_profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       badges: {
         Row: {
           id: string;
@@ -356,5 +391,7 @@ export type Analysis = Database["public"]["Tables"]["analyses"]["Row"];
 export type AnalysisChat =
   Database["public"]["Tables"]["analysis_chats"]["Row"];
 export type Bookmark = Database["public"]["Tables"]["bookmarks"]["Row"];
+export type SavedScramble =
+  Database["public"]["Tables"]["saved_scrambles"]["Row"];
 export type Badge = Database["public"]["Tables"]["badges"]["Row"];
 export type XpEvent = Database["public"]["Tables"]["xp_events"]["Row"];

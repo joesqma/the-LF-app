@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   linkWCAProfile,
+  signOut,
   unlinkWCAProfile,
   updateUserProfile,
   type WCAData,
 } from "~/app/(app)/profile/actions";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { triggerProfileRefetch } from "~/hooks/useUser";
 import { cn } from "~/lib/utils";
 import type { UserProfile } from "~/types/database";
 
@@ -111,6 +113,12 @@ function ProfileTab({
   profile: UserProfile | null;
   onRefresh: () => void;
 }) {
+  const [displayNameValue, setDisplayNameValue] = useState<string>(
+    profile?.display_name ?? "",
+  );
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameMsg, setNameMsg] = useState<string | null>(null);
+
   const [method, setMethod] = useState<string>(profile?.method ?? "unknown");
   const [goal, setGoal] = useState<string>(
     profile?.primary_goal ?? GOAL_OPTIONS[0],
@@ -119,9 +127,33 @@ function ProfileTab({
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    setDisplayNameValue(profile?.display_name ?? "");
     setMethod(profile?.method ?? "unknown");
     setGoal(profile?.primary_goal ?? GOAL_OPTIONS[0]);
-  }, [profile?.method, profile?.primary_goal]);
+  }, [profile?.display_name, profile?.method, profile?.primary_goal]);
+
+  async function handleSaveName() {
+    setNameSaving(true);
+    setNameMsg(null);
+    const result = await updateUserProfile({
+      display_name: displayNameValue,
+      method: (profile?.method ?? "unknown") as
+        | "cfop"
+        | "roux"
+        | "beginner"
+        | "unknown",
+      primary_goal: profile?.primary_goal ?? GOAL_OPTIONS[0],
+    });
+    setNameSaving(false);
+    if ("error" in result) {
+      setNameMsg(`Error: ${result.error}`);
+    } else {
+      setNameMsg("Saved!");
+      triggerProfileRefetch();
+      onRefresh();
+      setTimeout(() => setNameMsg(null), 2000);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -170,6 +202,46 @@ function ProfileTab({
 
       {/* Editable fields */}
       <div className="max-w-sm space-y-4">
+        <div className="space-y-1.5">
+          <label
+            htmlFor="display-name"
+            className="text-sm font-medium text-foreground"
+          >
+            Display name
+          </label>
+          <div className="flex gap-2">
+            <Input
+              id="display-name"
+              value={displayNameValue}
+              onChange={(e) => setDisplayNameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveName();
+              }}
+              placeholder={user.email}
+            />
+            <Button
+              size="sm"
+              disabled={nameSaving}
+              onClick={handleSaveName}
+              className="shrink-0"
+            >
+              {nameSaving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+          {nameMsg && (
+            <p
+              className={cn(
+                "text-xs",
+                nameMsg.startsWith("Error")
+                  ? "text-destructive"
+                  : "text-muted-foreground",
+              )}
+            >
+              {nameMsg}
+            </p>
+          )}
+        </div>
+
         <div className="space-y-1.5">
           <label
             htmlFor="method"
@@ -229,6 +301,25 @@ function ProfileTab({
       </div>
 
       <WCASection profile={profile} onRefresh={onRefresh} />
+
+      <SignOutSection />
+    </div>
+  );
+}
+
+// ── Sign-out section ──────────────────────────────────────────────────────────
+
+function SignOutSection() {
+  return (
+    <div className="border-t border-border pt-6">
+      <form action={signOut}>
+        <button
+          type="submit"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Sign out
+        </button>
+      </form>
     </div>
   );
 }

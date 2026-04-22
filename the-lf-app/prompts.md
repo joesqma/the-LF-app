@@ -1,4 +1,4 @@
-# Cubewise — Implementation Blueprint & LLM Prompts
+ # Cubewise — Implementation Blueprint & LLM Prompts
 
 ---
 

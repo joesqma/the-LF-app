@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "~/lib/supabase/server";
 import type { Database } from "~/types/database";
 
@@ -15,6 +16,7 @@ export type WCAData = {
 };
 
 export async function updateUserProfile(data: {
+  display_name?: string;
   method: Method;
   primary_goal: string;
 }): Promise<{ error: string } | { success: true }> {
@@ -25,6 +27,9 @@ export async function updateUserProfile(data: {
   if (!user) return { error: "Not authenticated" };
 
   const update: ProfileUpdate = {
+    ...(data.display_name !== undefined && {
+      display_name: data.display_name.trim() || null,
+    }),
     method: data.method,
     primary_goal: data.primary_goal,
   };
@@ -124,4 +129,10 @@ export async function unlinkWCAProfile(): Promise<
 
   revalidatePath("/profile");
   return { success: true };
+}
+
+export async function signOut(): Promise<never> {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }

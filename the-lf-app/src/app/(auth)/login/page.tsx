@@ -50,9 +50,19 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-card p-8 shadow-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
-            Cubewise
-          </h1>
+          <div className="mb-2 flex items-center justify-center gap-3">
+            {/* biome-ignore lint/performance/noImgElement: decorative brand mark */}
+            <img
+              src="/icon.png"
+              alt=""
+              width={56}
+              height={56}
+              className="h-14 w-14 object-contain"
+            />
+            <h1 className="text-2xl font-bold tracking-tight text-card-foreground">
+              Cubewise
+            </h1>
+          </div>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Your personal AI speedcubing coach
           </p>
