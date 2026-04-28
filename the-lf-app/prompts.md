@@ -837,8 +837,8 @@ Wire up: saving a video from any lesson detail page should persist to the bookma
 
 ### PROMPT 12 — Analysis: Video Upload Pipeline
 
-```
-Continuing Cubewise. Learn section is complete.
+``` Learn section is complete
+Continuing Cubewise. 
 
 Your task is steps 5A–5B: set up video storage and build the upload UI.
 
@@ -884,82 +884,8 @@ Wire up: upload a video, confirm it appears in Supabase Storage, confirm the pen
 ### PROMPT 13 — Analysis: Gemini Integration & Report UI
 
 ```
-Continuing Cubewise. Video upload creates a pending analysis row and redirects to /analysis/{id}.
 
-Your task is steps 5C–5D: send the video to Gemini and render the structured report.
-
-1. Create /src/app/api/analysis/create/route.ts:
-   - POST handler, body: { analysisId: string }
-   - Authenticate the request (verify the analysis row belongs to the requesting user)
-   - Update analysis status to 'processing'
-   - Download the video from Supabase Storage as a Buffer
-   - Upload to Gemini File API using @google/generative-ai:
-     const fileManager = new GoogleAIFileManager(process.env.GEMINI_API_KEY)
-     const uploadResult = await fileManager.uploadFile(buffer, { mimeType, displayName })
-   - Wait for file to be ACTIVE (poll getFile if needed)
-   - Send this prompt to gemini-1.5-flash with the file reference:
-
-     "You are an expert speedcubing coach analysing a 3x3 Rubik's Cube solve video.
-      The solver is using [METHOD].
-      
-      Analyse the solve and return ONLY a valid JSON object with no additional text, no markdown, no explanation.
-      
-      Return this exact structure:
-      {
-        \"overall_summary\": \"2-3 sentence summary of the solve\",
-        \"estimated_total_time\": \"time in seconds as string\",
-        \"top_priorities\": [\"priority 1\", \"priority 2\", \"priority 3\"],
-        \"phases\": [
-          {
-            \"name\": \"phase name\",
-            \"timestamp_start\": \"0:00\",
-            \"timestamp_end\": \"0:00\",
-            \"algorithm_identified\": \"algorithm name or null\",
-            \"observations\": \"what you observed\",
-            \"recommendation\": \"specific actionable improvement\"
-          }
-        ],
-        \"recommended_lesson_ids\": [\"lesson-id-1\", \"lesson-id-2\"]
-      }
-      
-      For CFOP, phases are: Cross, F2L Pair 1, F2L Pair 2, F2L Pair 3, F2L Pair 4, OLL, PLL.
-      For Roux, phases are: First Block, Second Square, Last Pair, CMLL, LSE.
-      
-      Focus on: algorithm identification, execution hesitations, phase timing, look-ahead quality.
-      Do not attempt frame-precise fingertrick analysis. Do not return anything except the JSON object."
-
-   - Parse the JSON response (strip any accidental markdown fences)
-   - Store result in analyses.report, set status='complete'
-   - On any error: set status='failed', log error
-
-2. Create /src/app/api/analysis/[id]/route.ts:
-   - GET handler: returns the analysis row (status + report if complete)
-   - Only accessible by the owner of the analysis
-
-3. Create /src/app/(app)/analysis/[id]/page.tsx:
-   - On mount: trigger POST to /api/analysis/create with the analysisId (only if status is 'pending')
-   - Poll GET /api/analysis/{id} every 3 seconds while status is 'pending' or 'processing'
-   - Loading state: animated skeleton with "Analysing your solve..." message
-   - Failed state: error message + "Try Again" button that re-triggers the analysis
-   - Complete state: render the report
-
-4. Create /src/components/analysis/AnalysisSummaryCard.tsx:
-   - Overall summary text
-   - Top 3 priorities as numbered cards with subtle background
-   - Estimated total time
-
-5. Create /src/components/analysis/PhaseBreakdown.tsx:
-   - Accordion list — one collapsible panel per phase
-   - Each panel header: phase name + timestamp range
-   - Panel content: algorithm identified (or "—"), observations paragraph, recommendation paragraph
-
-6. Create /src/components/analysis/RecommendedLessons.tsx:
-   - Maps recommended_lesson_ids from the report to lesson objects from the content files
-   - Renders 2-3 lesson cards with title, track badge, link to lesson
-
-Wire up: full flow — upload video → Gemini analyses → report renders with phases, summary, and lesson recommendations.
 ```
-
 ---
 
 ### PROMPT 14 — Analysis: Claude Chat Integration

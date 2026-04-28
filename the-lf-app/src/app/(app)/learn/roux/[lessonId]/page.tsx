@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { PageShell } from "~/components/layout/PageShell";
 import { LessonCompleteButton } from "~/components/learn/LessonCompleteButton";
 import { SaveToLibraryButton } from "~/components/learn/SaveToLibraryButton";
-import { cfopLessons } from "~/lib/content/cfop";
+import { rouxLessons } from "~/lib/content/roux";
 import { createClient } from "~/lib/supabase/server";
 
 function getYouTubeEmbedUrl(url: string): string {
@@ -15,12 +15,12 @@ interface Props {
   params: Promise<{ lessonId: string }>;
 }
 
-export default async function LessonPage({ params }: Props) {
+export default async function RouxLessonPage({ params }: Props) {
   const { lessonId } = await params;
 
-  const lessonIndex = cfopLessons.findIndex((l) => l.id === lessonId);
+  const lessonIndex = rouxLessons.findIndex((l) => l.id === lessonId);
   if (lessonIndex === -1) notFound();
-  const lesson = cfopLessons[lessonIndex];
+  const lesson = rouxLessons[lessonIndex];
 
   const supabase = await createClient();
   const {
@@ -40,27 +40,26 @@ export default async function LessonPage({ params }: Props) {
   const completed = (profile?.completed_lessons as string[] | null) ?? [];
   const bookmarkedUrls = new Set((bookmarkRows ?? []).map((b) => b.video_url));
 
-  // Check sequential access: all lessons in same phase before this one must be done
-  const phaseLesSons = cfopLessons
+  // Sequential lock: previous lesson in same phase must be completed
+  const phaseLessons = rouxLessons
     .filter((l) => l.phase === lesson.phase)
     .sort((a, b) => a.order - b.order);
-  const lessonPosInPhase = phaseLesSons.findIndex((l) => l.id === lessonId);
-  if (lessonPosInPhase > 0) {
-    const prev = phaseLesSons[lessonPosInPhase - 1];
-    if (!completed.includes(prev.id)) redirect("/learn/cfop");
+  const posInPhase = phaseLessons.findIndex((l) => l.id === lessonId);
+  if (posInPhase > 0) {
+    const prev = phaseLessons[posInPhase - 1];
+    if (!completed.includes(prev.id)) redirect("/learn/roux");
   }
 
   const isCompleted = completed.includes(lessonId);
-  const nextLesson = cfopLessons[lessonIndex + 1] ?? null;
-  const nextLessonHref = nextLesson ? `/learn/cfop/${nextLesson.id}` : null;
+  const nextLesson = rouxLessons[lessonIndex + 1] ?? null;
+  const nextLessonHref = nextLesson ? `/learn/roux/${nextLesson.id}` : null;
 
   return (
     <PageShell
       title={lesson.title}
-      subtitle={`${lesson.estimatedMinutes} min · CFOP · ${lesson.phase}`}
+      subtitle={`${lesson.estimatedMinutes} min · Roux · ${lesson.phase}`}
     >
       <div className="flex max-w-2xl flex-col gap-8">
-        {/* Videos */}
         {lesson.videos.length > 0 && (
           <section className="flex flex-col gap-4">
             {lesson.videos.map((video) => (
@@ -82,7 +81,7 @@ export default async function LessonPage({ params }: Props) {
                     videoUrl={video.url}
                     title={video.title}
                     source={video.source}
-                    methodTag="cfop"
+                    methodTag="roux"
                     isBookmarked={bookmarkedUrls.has(video.url)}
                   />
                 </div>
@@ -91,12 +90,10 @@ export default async function LessonPage({ params }: Props) {
           </section>
         )}
 
-        {/* Description */}
         <section>
           <p className="text-sm text-muted-foreground">{lesson.description}</p>
         </section>
 
-        {/* Tips */}
         {lesson.tips.length > 0 && (
           <section className="flex flex-col gap-3">
             <h2 className="text-sm font-semibold text-foreground">Tips</h2>
@@ -114,7 +111,6 @@ export default async function LessonPage({ params }: Props) {
           </section>
         )}
 
-        {/* Complete button */}
         <LessonCompleteButton
           lessonId={lessonId}
           isCompleted={isCompleted}
