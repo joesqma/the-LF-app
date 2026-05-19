@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { UpsellModal } from "~/components/ui/UpsellModal";
 
 type Message = {
   id: string;
@@ -22,6 +23,7 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
   const [errorKind, setErrorKind] = useState<null | "limit" | "unavailable">(
     null,
   );
+  const [showUpsell, setShowUpsell] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -274,6 +276,12 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
 
         {errorKind === "limit" && (
           <div style={{ textAlign: "center", padding: "16px" }}>
+            {showUpsell && (
+              <UpsellModal
+                feature="chat"
+                onClose={() => setShowUpsell(false)}
+              />
+            )}
             <p
               className="font-dm-sans"
               style={{
@@ -286,6 +294,7 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
             </p>
             <button
               type="button"
+              onClick={() => setShowUpsell(true)}
               className="font-dm-sans"
               style={{
                 background: "#0d1a2e",

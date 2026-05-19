@@ -70,8 +70,13 @@ export default async function AnalysisPage() {
       .gte("created_at", startOfMonth),
   ]);
 
-  const method: "cfop" | "roux" =
-    profileResult.data?.method === "roux" ? "roux" : "cfop";
+  const profileMethod = profileResult.data?.method;
+  const method: "cfop" | "roux" | "beginner" =
+    profileMethod === "roux"
+      ? "roux"
+      : profileMethod === "beginner"
+        ? "beginner"
+        : "cfop";
   const recentAnalyses = recentResult.data ?? [];
   const usedThisMonth = usageResult.count ?? 0;
   const approachingLimit =

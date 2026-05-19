@@ -80,6 +80,10 @@
     font-family: var(--font-dm-sans), "DM Sans", sans-serif;
   }
 
+  .font-dm-mono {
+    font-family: var(--font-dm-mono), "DM Mono", monospace;
+  }
+
   /* Recommended lesson card */
   .db-rec-card {
     background: var(--bg-card);
@@ -811,6 +815,30 @@
   .fs-chat-input:disabled {
     opacity: 0.5;
   }
+  .fs-photo-btn {
+    width: 32px;
+    height: 36px;
+    border-radius: 7px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+  .fs-photo-btn:hover:not(:disabled) {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+  }
+  .fs-photo-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
   .fs-send-btn {
     width: 32px;
     height: 36px;
@@ -830,6 +858,123 @@
   .fs-send-btn:disabled {
     opacity: 0.4;
     cursor: default;
+  }
+
+  /* Stats page */
+  .st-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #1d1d1d transparent;
+  }
+  .st-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .st-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .st-scroll::-webkit-scrollbar-thumb {
+    background: #1d1d1d;
+    border-radius: 2px;
+  }
+  .st-stat-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
+    padding: 18px 20px;
+    transition: border-color 0.15s;
+  }
+  .st-stat-card:hover {
+    border-color: var(--border-hover);
+  }
+  .st-stat-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dimmer);
+    margin-bottom: 10px;
+  }
+  .st-stat-value {
+    font-weight: 400;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 5px;
+  }
+  .st-stat-sub {
+    font-size: 11px;
+    font-weight: 300;
+    color: var(--text-dimmer);
+  }
+  .st-pb-card {
+    border: 1px solid #1d3557;
+    border-radius: 12px;
+    background: #0a1625;
+    padding: 18px 20px;
+  }
+  .st-pb-label {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #3a5a80;
+    margin-bottom: 10px;
+  }
+  .st-pb-value {
+    font-size: 28px;
+    font-weight: 400;
+    color: #3b82f6;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    margin-bottom: 5px;
+  }
+  .st-pb-sub {
+    font-size: 11px;
+    font-weight: 300;
+    color: #3a5a80;
+  }
+  .st-chart-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg-card);
+    padding: 20px 22px;
+  }
+  .st-session-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 4px 28px 4px 10px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23555555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    cursor: pointer;
+    outline: none;
+    max-width: 200px;
+  }
+  .st-toggle-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dimmer);
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      color 0.15s,
+      background 0.15s;
+  }
+  .st-toggle-btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text-muted);
+  }
+  .st-toggle-btn-active {
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
+    color: var(--text-secondary);
   }
 
   /* Ghost save button */

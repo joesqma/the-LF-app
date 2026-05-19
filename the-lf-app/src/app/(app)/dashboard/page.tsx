@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
+import { DontKnowCTA } from "~/components/dashboard/DontKnowCTA";
 import { QuickNavGrid } from "~/components/dashboard/QuickNavGrid";
+import { QuickStatsBlock } from "~/components/dashboard/QuickStatsBlock";
 import { RecommendedLessonCard } from "~/components/dashboard/RecommendedLessonCard";
-import { getRecommendedLesson } from "~/lib/content/recommended";
+import { getRecommendedLesson } from "~/lib/recommendations";
 import { createClient } from "~/lib/supabase/server";
-import type { AnalysisReport } from "~/types/analysis";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -12,10 +13,20 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [profileResult, analysisResult] = await Promise.all([
+  const yearAgo = new Date();
+  yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+
+  const [
+    profileResult,
+    analysisResult,
+    recentSolvesResult,
+    totalSolvesResult,
+    datesResult,
+    analysisCountResult,
+  ] = await Promise.all([
     supabase
       .from("user_profiles")
-      .select("display_name, method, completed_lessons")
+      .select("display_name, method, completed_lessons, knows_how_to_solve")
       .eq("id", user.id)
       .single(),
     supabase
@@ -26,6 +37,25 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("solves")
+      .select("time_ms, penalty")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(12),
+    supabase
+      .from("solves")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id),
+    supabase
+      .from("solves")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", yearAgo.toISOString()),
+    supabase
+      .from("analyses")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id),
   ]);
 
   const profile = profileResult.data;
@@ -33,16 +63,36 @@ export default async function DashboardPage() {
     profile?.display_name ?? user.email?.split("@")[0] ?? "there";
   const firstName = displayName.split(" ")[0] ?? displayName;
 
+  const recentSolves = recentSolvesResult.data ?? [];
+  const totalSolves = totalSolvesResult.count ?? 0;
+  const daysActive = new Set(
+    (datesResult.data ?? []).map((s) => s.created_at.slice(0, 10)),
+  ).size;
+  const analysisCount = analysisCountResult.count ?? 0;
+
   const completedLessons =
     (profile?.completed_lessons as string[] | null) ?? [];
-  const analysisReport = analysisResult.data
-    ?.report as unknown as AnalysisReport | null;
+  const showDontKnowCTA = completedLessons.length === 0 && analysisCount === 0;
 
-  const recommendedLesson = getRecommendedLesson(
-    profile?.method ?? null,
-    completedLessons,
-    analysisReport?.recommended_lesson_ids,
-  );
+  // "Don't know where to start?" destination — uses onboarding answers
+  const dontKnowHref =
+    profile?.knows_how_to_solve === false
+      ? "/learn/cfop/cfop-cross-1"
+      : "/learn";
+
+  const recommended = profile
+    ? getRecommendedLesson({
+        profile: {
+          knows_how_to_solve: profile.knows_how_to_solve ?? false,
+          method: profile.method ?? null,
+          completed_lessons: profile.completed_lessons,
+          cfop_level: null,
+        },
+        recentAnalysis: analysisResult.data,
+        analysisCount,
+        totalSolves,
+      })
+    : null;
 
   return (
     <div
@@ -82,13 +132,28 @@ export default async function DashboardPage() {
         </h1>
       </div>
 
-      {/* Recommended lesson */}
-      {recommendedLesson && (
-        <RecommendedLessonCard lesson={recommendedLesson} />
+      {/* AI Recommendation */}
+      {recommended && (
+        <RecommendedLessonCard
+          recommendation={recommended}
+          dontKnowHref={dontKnowHref}
+        />
       )}
 
       {/* Quick navigation */}
       <QuickNavGrid />
+
+      {/* Don't know CTA */}
+      {showDontKnowCTA && (
+        <DontKnowCTA knowsHowToSolve={profile?.knows_how_to_solve ?? false} />
+      )}
+
+      {/* Quick stats — bottom of page */}
+      <QuickStatsBlock
+        recentSolves={recentSolves}
+        totalSolves={totalSolves}
+        daysActive={daysActive}
+      />
     </div>
   );
 }

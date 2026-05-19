@@ -57,6 +57,24 @@ function BookIcon() {
   );
 }
 
+function LibraryIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
 const NAV_ITEMS = [
   {
     href: "/timer",
@@ -75,6 +93,12 @@ const NAV_ITEMS = [
     title: "Browse lessons",
     subtitle: "Continue learning",
     Icon: BookIcon,
+  },
+  {
+    href: "/library",
+    title: "Library",
+    subtitle: "Saved lessons",
+    Icon: LibraryIcon,
   },
 ] as const;
 
@@ -95,7 +119,7 @@ export function QuickNavGrid() {
         Quick navigation
       </p>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {NAV_ITEMS.map(({ href, title, subtitle, Icon }) => (
           <Link key={href} href={href} className="db-nav-card">
             <div

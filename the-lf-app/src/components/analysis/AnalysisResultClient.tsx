@@ -181,6 +181,7 @@ export function AnalysisResultClient({
           summary={report.overall_summary}
           estimatedTime={report.estimated_total_time}
           topPriorities={report.top_priorities}
+          scramble={analysis.scramble}
         />
 
         <PhaseBreakdown phases={report.phases} onSeek={seekTo} />

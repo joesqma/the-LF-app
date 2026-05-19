@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart2,
   Bookmark,
   BookOpen,
   ChevronLeft,
@@ -10,6 +11,7 @@ import {
   Timer,
   User,
   Video,
+  Zap,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,9 +22,11 @@ import { cn } from "~/lib/utils";
 const navLinks = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/learn", label: "Learn", icon: BookOpen },
+  { href: "/training", label: "Training", icon: Zap },
   { href: "/timer", label: "Timer", icon: Timer },
   { href: "/analysis", label: "Analysis", icon: Video },
   { href: "/library", label: "Library", icon: Bookmark },
+  { href: "/stats", label: "Stats", icon: BarChart2 },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

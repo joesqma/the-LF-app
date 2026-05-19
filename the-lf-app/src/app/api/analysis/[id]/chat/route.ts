@@ -49,13 +49,6 @@ export async function POST(
     return Response.json({ error: "chat_limit_reached" }, { status: 403 });
   }
 
-  await supabase.from("analysis_chats").insert({
-    analysis_id: id,
-    user_id: user.id,
-    role: "user",
-    content: message,
-  });
-
   if (!env.GEMINI_API_KEY) {
     console.error(
       "[chat] GEMINI_API_KEY is not set — restart the dev server after editing .env.local",
@@ -70,10 +63,15 @@ ${JSON.stringify(analysis.report, null, 2)}
 
 Answer the solver's questions about their performance. Reference specific phases, timestamps, and observations from the report directly. Recommend concrete drills and techniques. Be encouraging but honest. Keep responses concise and actionable — no more than 3 short paragraphs unless a longer explanation is genuinely needed.`;
 
-  const geminiHistory = existingMessages.map((msg) => ({
+  // Build history, trimming any trailing user turns left by a previously failed call.
+  // Two consecutive user turns would cause Gemini to reject the request.
+  let geminiHistory = existingMessages.map((msg) => ({
     role: msg.role === "assistant" ? ("model" as const) : ("user" as const),
     parts: [{ text: msg.content }],
   }));
+  while (geminiHistory.length > 0 && geminiHistory.at(-1)?.role === "user") {
+    geminiHistory = geminiHistory.slice(0, -1);
+  }
 
   try {
     const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
@@ -86,12 +84,17 @@ Answer the solver's questions about their performance. Reference specific phases
     const result = await chat.sendMessage(message);
     const responseText = result.response.text();
 
-    await supabase.from("analysis_chats").insert({
-      analysis_id: id,
-      user_id: user.id,
-      role: "assistant",
-      content: responseText,
-    });
+    // Insert both messages together only on success — prevents orphaned user
+    // messages that corrupt history on subsequent calls.
+    await supabase.from("analysis_chats").insert([
+      { analysis_id: id, user_id: user.id, role: "user", content: message },
+      {
+        analysis_id: id,
+        user_id: user.id,
+        role: "assistant",
+        content: responseText,
+      },
+    ]);
 
     return Response.json({ reply: responseText });
   } catch (err) {

@@ -5,7 +5,8 @@ import { createClient } from "~/lib/supabase/server";
 export async function createAnalysis(
   userId: string,
   videoPath: string,
-  method: "cfop" | "roux",
+  method: "cfop" | "roux" | "beginner",
+  scramble?: string,
 ): Promise<{ error: string } | { id: string }> {
   const supabase = await createClient();
 
@@ -15,6 +16,7 @@ export async function createAnalysis(
       user_id: userId,
       video_path: videoPath,
       method,
+      scramble: scramble?.trim() || null,
       status: "pending",
     })
     .select("id")

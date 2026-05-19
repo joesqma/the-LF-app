@@ -3,6 +3,7 @@
 import { AlertTriangle, Film, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
+import { UpsellModal } from "~/components/ui/UpsellModal";
 import { env } from "~/env";
 import { createAnalysis } from "~/lib/actions/analysis";
 import { createClient } from "~/lib/supabase/client";
@@ -54,15 +55,17 @@ type Phase =
 
 interface Props {
   userId: string;
-  method: "cfop" | "roux";
+  method: "cfop" | "roux" | "beginner";
   canUpload: boolean;
+  scramble: string;
 }
 
-export function VideoUploader({ userId, method, canUpload }: Props) {
+export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [dragging, setDragging] = useState(false);
+  const [showUpsell, setShowUpsell] = useState(false);
 
   const processFile = useCallback(async (file: File) => {
     setPhase({ kind: "validating" });
@@ -134,11 +137,7 @@ export function VideoUploader({ userId, method, canUpload }: Props) {
     const { file, duration } = phase;
 
     if (!canUpload) {
-      setPhase({
-        kind: "error",
-        message:
-          "Monthly analysis limit reached. Upgrade to continue analysing.",
-      });
+      setShowUpsell(true);
       return;
     }
 
@@ -196,7 +195,7 @@ export function VideoUploader({ userId, method, canUpload }: Props) {
       return;
     }
 
-    const result = await createAnalysis(userId, path, method);
+    const result = await createAnalysis(userId, path, method, scramble);
     if ("error" in result) {
       setPhase({ kind: "error", message: result.error });
       return;
@@ -214,6 +213,12 @@ export function VideoUploader({ userId, method, canUpload }: Props) {
   ) {
     return (
       <div>
+        {showUpsell && (
+          <UpsellModal
+            feature="analysis"
+            onClose={() => setShowUpsell(false)}
+          />
+        )}
         {/* biome-ignore lint/a11y/noStaticElementInteractions: drop zone handles keyboard via file input button */}
         <div
           className={["anl-dropzone", dragging ? "anl-dropzone-drag" : ""]
@@ -297,68 +302,77 @@ export function VideoUploader({ userId, method, canUpload }: Props) {
 
   if (phase.kind === "ready") {
     return (
-      <div
-        style={{
-          border: "1px solid var(--border)",
-          borderRadius: "14px",
-          padding: "18px 20px",
-          background: "var(--bg-card)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-        }}
-      >
-        <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-          <Film
-            size={20}
-            style={{
-              color: "var(--text-dim)",
-              flexShrink: 0,
-              marginTop: "1px",
-            }}
+      <>
+        {showUpsell && (
+          <UpsellModal
+            feature="analysis"
+            onClose={() => setShowUpsell(false)}
           />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p
-              className="font-dm-sans"
+        )}
+        <div
+          style={{
+            border: "1px solid var(--border)",
+            borderRadius: "14px",
+            padding: "18px 20px",
+            background: "var(--bg-card)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "16px",
+          }}
+        >
+          <div
+            style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}
+          >
+            <Film
+              size={20}
               style={{
-                fontSize: "13px",
-                fontWeight: 500,
-                color: "var(--text-secondary)",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                color: "var(--text-dim)",
+                flexShrink: 0,
+                marginTop: "1px",
               }}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p
+                className="font-dm-sans"
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {phase.file.name}
+              </p>
+              <p
+                className="font-dm-sans"
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 300,
+                  color: "var(--text-dimmer)",
+                }}
+              >
+                {fmtDuration(phase.duration)} · {fmtBytes(phase.file.size)}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPhase({ kind: "idle" })}
+              className="anl-change-btn font-dm-sans"
             >
-              {phase.file.name}
-            </p>
-            <p
-              className="font-dm-sans"
-              style={{
-                fontSize: "11px",
-                fontWeight: 300,
-                color: "var(--text-dimmer)",
-              }}
-            >
-              {fmtDuration(phase.duration)} · {fmtBytes(phase.file.size)}
-            </p>
+              Change file
+            </button>
           </div>
           <button
             type="button"
-            onClick={() => setPhase({ kind: "idle" })}
-            className="anl-change-btn font-dm-sans"
+            onClick={handleUpload}
+            className="anl-analyse-btn font-dm-sans"
           >
-            Change file
+            Analyse solve →
           </button>
         </div>
-        <button
-          type="button"
-          onClick={handleUpload}
-          disabled={!canUpload}
-          className="anl-analyse-btn font-dm-sans"
-        >
-          Analyse solve →
-        </button>
-      </div>
+      </>
     );
   }
 

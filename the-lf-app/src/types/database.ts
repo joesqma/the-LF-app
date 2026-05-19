@@ -20,6 +20,21 @@ export type Database = {
           method: "cfop" | "roux" | "beginner" | "unknown" | null;
           current_average: string | null;
           primary_goal: string | null;
+          cfop_level:
+            | "none"
+            | "2look_oll"
+            | "2look_both"
+            | "full_ollpll"
+            | null;
+          f2l_foundation: string | null;
+          cross_sub8: string | null;
+          color_neutrality:
+            | "white_yellow"
+            | "white_only"
+            | "color_neutral"
+            | "other"
+            | null;
+          color_neutral_color: string | null;
           knows_how_to_solve: boolean;
           onboarding_complete: boolean;
           tier: "free" | "premium" | "lifetime";
@@ -40,6 +55,21 @@ export type Database = {
           method?: "cfop" | "roux" | "beginner" | "unknown" | null;
           current_average?: string | null;
           primary_goal?: string | null;
+          cfop_level?:
+            | "none"
+            | "2look_oll"
+            | "2look_both"
+            | "full_ollpll"
+            | null;
+          f2l_foundation?: string | null;
+          cross_sub8?: string | null;
+          color_neutrality?:
+            | "white_yellow"
+            | "white_only"
+            | "color_neutral"
+            | "other"
+            | null;
+          color_neutral_color?: string | null;
           knows_how_to_solve?: boolean;
           onboarding_complete?: boolean;
           tier?: "free" | "premium" | "lifetime";
@@ -60,6 +90,21 @@ export type Database = {
           method?: "cfop" | "roux" | "beginner" | "unknown" | null;
           current_average?: string | null;
           primary_goal?: string | null;
+          cfop_level?:
+            | "none"
+            | "2look_oll"
+            | "2look_both"
+            | "full_ollpll"
+            | null;
+          f2l_foundation?: string | null;
+          cross_sub8?: string | null;
+          color_neutrality?:
+            | "white_yellow"
+            | "white_only"
+            | "color_neutral"
+            | "other"
+            | null;
+          color_neutral_color?: string | null;
           knows_how_to_solve?: boolean;
           onboarding_complete?: boolean;
           tier?: "free" | "premium" | "lifetime";
@@ -77,18 +122,21 @@ export type Database = {
           id: string;
           user_id: string;
           name: string;
+          puzzle: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
           name: string;
+          puzzle?: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
           name?: string;
+          puzzle?: string;
           created_at?: string;
         };
         Relationships: [
@@ -157,7 +205,8 @@ export type Database = {
           id: string;
           user_id: string;
           video_path: string | null;
-          method: "cfop" | "roux" | null;
+          method: "cfop" | "roux" | "beginner" | null;
+          scramble: string | null;
           status: "pending" | "processing" | "complete" | "failed";
           report: Json | null;
           created_at: string;
@@ -166,7 +215,8 @@ export type Database = {
           id?: string;
           user_id: string;
           video_path?: string | null;
-          method?: "cfop" | "roux" | null;
+          method?: "cfop" | "roux" | "beginner" | null;
+          scramble?: string | null;
           status?: "pending" | "processing" | "complete" | "failed";
           report?: Json | null;
           created_at?: string;
@@ -175,7 +225,8 @@ export type Database = {
           id?: string;
           user_id?: string;
           video_path?: string | null;
-          method?: "cfop" | "roux" | null;
+          method?: "cfop" | "roux" | "beginner" | null;
+          scramble?: string | null;
           status?: "pending" | "processing" | "complete" | "failed";
           report?: Json | null;
           created_at?: string;

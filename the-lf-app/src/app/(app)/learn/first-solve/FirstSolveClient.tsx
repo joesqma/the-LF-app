@@ -12,6 +12,13 @@ type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
+  imageUrl?: string;
+};
+
+type PendingImage = {
+  dataUrl: string;
+  base64: string;
+  mimeType: string;
 };
 
 interface Props {
@@ -30,8 +37,10 @@ export function FirstSolveClient({
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(false);
+  const [pendingImage, setPendingImage] = useState<PendingImage | null>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const activeStep = steps.find((s) => s.id === activeStepId) ?? steps[0];
   const completedCount = steps.filter((s) => s.state === "done").length;
@@ -43,6 +52,7 @@ export function FirstSolveClient({
     setChatMessages([]);
     setChatInput("");
     setChatError(false);
+    setPendingImage(null);
   }, [activeStepId]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: scroll trigger
@@ -108,16 +118,38 @@ export function FirstSolveClient({
     }
   }, [activeStep, steps]);
 
+  const handlePhotoSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = "";
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        // dataUrl: "data:<mimeType>;base64,<data>"
+        const [header, base64] = dataUrl.split(",");
+        const mimeType = header.split(":")[1].split(";")[0];
+        setPendingImage({ dataUrl, base64, mimeType });
+      };
+      reader.readAsDataURL(file);
+    },
+    [],
+  );
+
   const sendChat = useCallback(async () => {
     const trimmed = chatInput.trim();
-    if (!trimmed || chatLoading) return;
+    if ((!trimmed && !pendingImage) || chatLoading) return;
+    const imageSnapshot = pendingImage;
     setChatInput("");
+    setPendingImage(null);
     setChatError(false);
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
       content: trimmed,
+      imageUrl: imageSnapshot?.dataUrl,
     };
     setChatMessages((prev) => [...prev, userMsg]);
     setChatLoading(true);
@@ -126,7 +158,12 @@ export function FirstSolveClient({
       const res = await fetch("/api/learn/first-solve/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, stepId: activeStep.id }),
+        body: JSON.stringify({
+          message: trimmed || "I've attached a photo of my cube.",
+          stepId: activeStep.id,
+          imageBase64: imageSnapshot?.base64,
+          imageMimeType: imageSnapshot?.mimeType,
+        }),
       });
       if (!res.ok) {
         setChatError(true);
@@ -142,12 +179,12 @@ export function FirstSolveClient({
     } finally {
       setChatLoading(false);
     }
-  }, [chatInput, chatLoading, activeStep.id]);
+  }, [chatInput, pendingImage, chatLoading, activeStep.id]);
 
   function handleChatKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      void sendChat();
+      if (chatInput.trim() || pendingImage) void sendChat();
     }
   }
 
@@ -704,7 +741,10 @@ export function FirstSolveClient({
             gap: "10px",
           }}
         >
-          {chatMessages.length === 0 && !chatLoading && !chatError ? (
+          {chatMessages.length === 0 &&
+          !chatLoading &&
+          !chatError &&
+          !pendingImage ? (
             <div
               style={{
                 flex: 1,
@@ -743,35 +783,56 @@ export function FirstSolveClient({
               <div
                 key={msg.id}
                 className="font-dm-sans"
-                style={
-                  msg.role === "user"
-                    ? {
-                        alignSelf: "flex-end",
-                        maxWidth: "85%",
-                        padding: "9px 12px",
-                        fontSize: "12px",
-                        lineHeight: 1.6,
-                        background: "#0d1a2e",
-                        border: "1px solid #1d3557",
-                        color: "var(--text-secondary)",
-                        borderRadius: "10px 10px 3px 10px",
-                        whiteSpace: "pre-wrap",
-                      }
-                    : {
-                        alignSelf: "flex-start",
-                        maxWidth: "85%",
-                        padding: "9px 12px",
-                        fontSize: "12px",
-                        lineHeight: 1.6,
-                        background: "#111",
-                        border: "1px solid var(--border)",
-                        color: "var(--text-secondary)",
-                        borderRadius: "10px 10px 10px 3px",
-                        whiteSpace: "pre-wrap",
-                      }
-                }
+                style={{
+                  alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+                  maxWidth: "85%",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "4px",
+                }}
               >
-                {msg.content}
+                {msg.imageUrl && (
+                  // biome-ignore lint/performance/noImgElement lint/a11y/useAltText: data URL — next/image does not support data URLs
+                  <img
+                    src={msg.imageUrl}
+                    style={{
+                      width: "100%",
+                      borderRadius: "8px",
+                      border: "1px solid #1d3557",
+                      objectFit: "cover",
+                      maxHeight: "160px",
+                    }}
+                  />
+                )}
+                {msg.content && (
+                  <div
+                    style={
+                      msg.role === "user"
+                        ? {
+                            padding: "9px 12px",
+                            fontSize: "12px",
+                            lineHeight: 1.6,
+                            background: "#0d1a2e",
+                            border: "1px solid #1d3557",
+                            color: "var(--text-secondary)",
+                            borderRadius: "10px 10px 3px 10px",
+                            whiteSpace: "pre-wrap",
+                          }
+                        : {
+                            padding: "9px 12px",
+                            fontSize: "12px",
+                            lineHeight: 1.6,
+                            background: "#111",
+                            border: "1px solid var(--border)",
+                            color: "var(--text-secondary)",
+                            borderRadius: "10px 10px 10px 3px",
+                            whiteSpace: "pre-wrap",
+                          }
+                    }
+                  >
+                    {msg.content}
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -818,49 +879,165 @@ export function FirstSolveClient({
           <div ref={chatBottomRef} />
         </div>
 
-        {/* Input row */}
+        {/* Input area */}
         <div
           style={{
-            padding: "10px 12px",
             borderTop: "1px solid var(--border)",
-            display: "flex",
-            gap: "6px",
             flexShrink: 0,
           }}
         >
-          <input
-            ref={chatInputRef}
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={handleChatKeyDown}
-            placeholder="Ask about this step..."
-            disabled={chatLoading}
-            className="fs-chat-input font-dm-sans"
-          />
-          <button
-            type="button"
-            onClick={() => void sendChat()}
-            disabled={!chatInput.trim() || chatLoading}
-            className="fs-send-btn"
-            aria-label="Send message"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 14 14"
-              fill="none"
-              aria-hidden="true"
+          {/* Pending image preview */}
+          {pendingImage && (
+            <div
+              style={{
+                padding: "8px 12px 0",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "8px",
+              }}
             >
-              <path
-                d="M1 7h12M7 1l6 6-6 6"
-                stroke="#000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+              <div style={{ position: "relative", display: "inline-block" }}>
+                {/* biome-ignore lint/performance/noImgElement lint/a11y/useAltText: data URL — next/image does not support data URLs */}
+                <img
+                  src={pendingImage.dataUrl}
+                  style={{
+                    height: "56px",
+                    width: "56px",
+                    objectFit: "cover",
+                    borderRadius: "6px",
+                    border: "1px solid #1d3557",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setPendingImage(null)}
+                  aria-label="Remove photo"
+                  style={{
+                    position: "absolute",
+                    top: "-5px",
+                    right: "-5px",
+                    width: "16px",
+                    height: "16px",
+                    borderRadius: "50%",
+                    background: "#ef4444",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  <svg
+                    width="8"
+                    height="8"
+                    viewBox="0 0 8 8"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M1 1l6 6M7 1L1 7"
+                      stroke="#fff"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Input row */}
+          <div
+            style={{
+              padding: "10px 12px",
+              display: "flex",
+              gap: "6px",
+            }}
+          >
+            {/* Hidden file input */}
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handlePhotoSelect}
+            />
+
+            {/* Photo attach button */}
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              disabled={chatLoading}
+              className="fs-photo-btn"
+              aria-label="Attach photo"
+              title="Attach a photo of your cube"
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 14 14"
+                fill="none"
+                aria-hidden="true"
+              >
+                <rect
+                  x="1"
+                  y="3"
+                  width="12"
+                  height="9"
+                  rx="1.5"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                />
+                <circle
+                  cx="7"
+                  cy="7.5"
+                  r="2"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                />
+                <path
+                  d="M5 3V2.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V3"
+                  stroke="currentColor"
+                  strokeWidth="1.3"
+                />
+              </svg>
+            </button>
+
+            <input
+              ref={chatInputRef}
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={handleChatKeyDown}
+              placeholder="Ask about this step..."
+              disabled={chatLoading}
+              className="fs-chat-input font-dm-sans"
+            />
+            <button
+              type="button"
+              onClick={() => void sendChat()}
+              disabled={(!chatInput.trim() && !pendingImage) || chatLoading}
+              className="fs-send-btn"
+              aria-label="Send message"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 14 14"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M1 7h12M7 1l6 6-6 6"
+                  stroke="#000"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>

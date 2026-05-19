@@ -167,23 +167,38 @@ export default async function TrackPage({ params }: Props) {
                 >
                   {t.name}
                 </span>
-                {!t.soon && prog ? (
-                  <span
-                    className="font-dm-sans"
-                    style={{
-                      fontSize: "10px",
-                      padding: "1px 6px",
-                      borderRadius: "20px",
-                      color: "var(--text-dimmer)",
-                      background: isActive ? "transparent" : "#161616",
-                      border: isActive
-                        ? "1px solid transparent"
-                        : "1px solid #1d1d1d",
-                    }}
-                  >
-                    {prog.done}/{prog.total}
-                  </span>
-                ) : null}
+                {!t.soon && prog && prog.total > 0
+                  ? (() => {
+                      const complete = prog.done === prog.total;
+                      return (
+                        <span
+                          className="font-dm-sans"
+                          style={{
+                            fontSize: "10px",
+                            padding: "1px 6px",
+                            borderRadius: "20px",
+                            color: complete ? "#22c55e" : "var(--text-dimmer)",
+                            background: complete
+                              ? isActive
+                                ? "transparent"
+                                : "#0d2a18"
+                              : isActive
+                                ? "transparent"
+                                : "#161616",
+                            border: complete
+                              ? isActive
+                                ? "1px solid transparent"
+                                : "1px solid #14532d"
+                              : isActive
+                                ? "1px solid transparent"
+                                : "1px solid #1d1d1d",
+                          }}
+                        >
+                          {complete ? "✓" : `${prog.done}/${prog.total}`}
+                        </span>
+                      );
+                    })()
+                  : null}
               </Link>
             );
           })}

@@ -17,7 +17,7 @@ export const maxDuration = 300;
 const INLINE_LIMIT = 15 * 1024 * 1024; // 15 MB — use inline data below this
 
 const PROMPT = `You are an expert speedcubing coach analysing a 3x3 Rubik's Cube solve video.
-The solver is using [METHOD].
+The solver is using [METHOD].[SCRAMBLE]
 
 Analyse the solve and return ONLY a valid JSON object with no additional text, no markdown, no explanation.
 
@@ -41,6 +41,7 @@ Return this exact structure:
 
 For CFOP, phases are: Cross, F2L Pair 1, F2L Pair 2, F2L Pair 3, F2L Pair 4, OLL, PLL.
 For Roux, phases are: First Block, Second Square, Last Pair, CMLL, LSE.
+For Beginner, phases are: White Cross, White Corners, Middle Layer Edges, Yellow Cross, Yellow Corners.
 
 Focus on: algorithm identification, execution hesitations, phase timing, look-ahead quality.
 Do not attempt frame-precise fingertrick analysis. Do not return anything except the JSON object.`;
@@ -59,6 +60,7 @@ async function runAnalysis(
   method: string,
   analysisId: string,
   geminiKey: string,
+  scramble: string | null,
 ) {
   console.log(`[analysis] starting background job for ${analysisId}`);
   try {
@@ -74,13 +76,20 @@ async function runAnalysis(
 
     const genAI = new GoogleGenerativeAI(geminiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const prompt = PROMPT.replace("[METHOD]", method.toUpperCase());
+    const scrambleNote = scramble
+      ? `\nThe scramble for this solve was: ${scramble}`
+      : "";
+    const prompt = PROMPT.replace("[METHOD]", method.toUpperCase()).replace(
+      "[SCRAMBLE]",
+      scrambleNote,
+    );
 
-    let videoPart: Part;
+    let videoPart: Part & { videoMetadata?: { fps: number } };
 
     if (buffer.length <= INLINE_LIMIT) {
       videoPart = {
         inlineData: { mimeType, data: buffer.toString("base64") },
+        videoMetadata: { fps: 4 },
       };
     } else {
       const ext = videoPath.split(".").at(-1) ?? "mp4";
@@ -106,6 +115,7 @@ async function runAnalysis(
 
         videoPart = {
           fileData: { mimeType: geminiFile.mimeType, fileUri: geminiFile.uri },
+          videoMetadata: { fps: 4 },
         };
       } finally {
         await unlink(tmpPath).catch(() => {});
@@ -200,6 +210,7 @@ export async function POST(req: NextRequest) {
       analysis.method ?? "cfop",
       analysisId,
       env.GEMINI_API_KEY,
+      analysis.scramble ?? null,
     ),
   );
 

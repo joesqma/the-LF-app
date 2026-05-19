@@ -19,7 +19,7 @@ export const FIRST_SOLVE_STEPS: FirstSolveStep[] = [
     videos: [
       {
         source: "Bright Side",
-        videoId: "KGvQRaK1mvs",
+        videoId: "V9-5UvXzU3s",
         startSeconds: 12,
         label: "0:12",
       },
@@ -51,7 +51,7 @@ export const FIRST_SOLVE_STEPS: FirstSolveStep[] = [
       },
       {
         source: "Bright Side",
-        videoId: "KGvQRaK1mvs",
+        videoId: "V9-5UvXzU3s",
         startSeconds: 174,
         label: "2:54",
       },
@@ -76,7 +76,7 @@ export const FIRST_SOLVE_STEPS: FirstSolveStep[] = [
       },
       {
         source: "Bright Side",
-        videoId: "KGvQRaK1mvs",
+        videoId: "V9-5UvXzU3s",
         startSeconds: 246,
         label: "4:06",
       },
@@ -101,7 +101,7 @@ export const FIRST_SOLVE_STEPS: FirstSolveStep[] = [
       },
       {
         source: "Bright Side",
-        videoId: "KGvQRaK1mvs",
+        videoId: "V9-5UvXzU3s",
         startSeconds: 330,
         label: "5:30",
       },
@@ -126,7 +126,7 @@ export const FIRST_SOLVE_STEPS: FirstSolveStep[] = [
       },
       {
         source: "Bright Side",
-        videoId: "KGvQRaK1mvs",
+        videoId: "V9-5UvXzU3s",
         startSeconds: 416,
         label: "6:56",
       },
@@ -151,7 +151,7 @@ export const FIRST_SOLVE_STEPS: FirstSolveStep[] = [
       },
       {
         source: "Bright Side",
-        videoId: "KGvQRaK1mvs",
+        videoId: "V9-5UvXzU3s",
         startSeconds: 538,
         label: "8:58",
       },
@@ -176,7 +176,7 @@ export const FIRST_SOLVE_STEPS: FirstSolveStep[] = [
       },
       {
         source: "Bright Side",
-        videoId: "KGvQRaK1mvs",
+        videoId: "V9-5UvXzU3s",
         startSeconds: 578,
         label: "9:38",
       },

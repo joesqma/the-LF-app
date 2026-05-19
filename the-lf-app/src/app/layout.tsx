@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Syne } from "next/font/google";
+import { DM_Mono, DM_Sans, Syne } from "next/font/google";
 import "./globals.css";
 
 const syne = Syne({
@@ -16,6 +16,13 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-dm-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Cubewise",
   description: "Your personal AI speedcubing coach",
@@ -29,7 +36,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${syne.variable} ${dmSans.variable}`}>{children}</body>
+      <body
+        className={`${syne.variable} ${dmSans.variable} ${dmMono.variable}`}
+      >
+        {children}
+      </body>
     </html>
   );
 }

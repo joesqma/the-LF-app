@@ -25,30 +25,15 @@ export default async function LibraryPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
-      .from("solves")
-      .select("id, scramble, created_at, session_id")
+      .from("saved_scrambles")
+      .select("id, scramble, puzzle, created_at")
       .eq("user_id", user.id)
-      .not("scramble", "is", null)
       .order("created_at", { ascending: false }),
   ]);
 
   const analyses = analysisData ?? [];
   const bookmarks = bookmarkData ?? [];
-
-  // Deduplicate scrambles — same string keeps most recent occurrence (data is DESC)
-  const seen = new Set<string>();
-  const scrambles: Array<{
-    id: string;
-    scramble: string;
-    created_at: string;
-    session_id: string;
-  }> = [];
-  for (const s of scrambleData ?? []) {
-    if (s.scramble && !seen.has(s.scramble)) {
-      seen.add(s.scramble);
-      scrambles.push(s as (typeof scrambles)[0]);
-    }
-  }
+  const scrambles = scrambleData ?? [];
 
   return (
     <div

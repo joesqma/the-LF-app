@@ -2,12 +2,14 @@ interface Props {
   summary: string;
   estimatedTime: string;
   topPriorities: string[];
+  scramble?: string | null;
 }
 
 export function AnalysisSummaryCard({
   summary,
   estimatedTime,
   topPriorities,
+  scramble,
 }: Props) {
   return (
     <div className="flex flex-col gap-5 rounded-xl border border-border bg-card p-5">
@@ -22,6 +24,17 @@ export function AnalysisSummaryCard({
         </div>
         <p className="text-sm leading-relaxed text-foreground">{summary}</p>
       </div>
+
+      {scramble && (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+            Scramble
+          </p>
+          <p className="font-mono text-xs leading-relaxed text-foreground">
+            {scramble}
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">

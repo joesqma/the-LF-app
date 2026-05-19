@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ConfirmDialog } from "~/components/ui/ConfirmDialog";
 import { removeBookmark } from "~/lib/actions/bookmarks";
+import { deleteSavedScramble } from "~/lib/actions/timer";
 import type { AnalysisReport } from "~/types/analysis";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -13,7 +15,7 @@ type TabId = "analyses" | "videos" | "scrambles";
 
 interface AnalysisRow {
   id: string;
-  method: "cfop" | "roux" | null;
+  method: "cfop" | "roux" | "beginner" | null;
   status: "pending" | "processing" | "complete" | "failed";
   report: unknown;
   created_at: string;
@@ -31,8 +33,8 @@ interface BookmarkRow {
 interface ScrambleRow {
   id: string;
   scramble: string;
+  puzzle: string;
   created_at: string;
-  session_id: string;
 }
 
 interface Props {
@@ -127,7 +129,7 @@ function EmptyDashed({
   title,
   subtitle,
 }: {
-  icon: string;
+  icon?: string;
   title: string;
   subtitle: string;
 }) {
@@ -140,15 +142,21 @@ function EmptyDashed({
         textAlign: "center",
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{ fontSize: "28px", opacity: 0.3, marginBottom: "14px" }}
-      >
-        {icon}
-      </div>
+      {icon && (
+        <div
+          aria-hidden="true"
+          style={{ fontSize: "28px", opacity: 0.3, marginBottom: "14px" }}
+        >
+          {icon}
+        </div>
+      )}
       <p
         className="font-dm-sans"
-        style={{ fontSize: "14px", fontWeight: 500, color: "#2a2a2a" }}
+        style={{
+          fontSize: "14px",
+          fontWeight: 500,
+          color: "var(--text-secondary)",
+        }}
       >
         {title}
       </p>
@@ -157,7 +165,7 @@ function EmptyDashed({
         style={{
           fontSize: "13px",
           fontWeight: 300,
-          color: "#222",
+          color: "var(--text-muted)",
           marginTop: "6px",
         }}
       >
@@ -172,15 +180,18 @@ function EmptyDashed({
 export function LibraryClient({
   analyses,
   bookmarks: initialBookmarks,
-  scrambles,
+  scrambles: initialScrambles,
 }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>("analyses");
   const [bookmarks, setBookmarks] = useState(initialBookmarks);
+  const [scrambles, setScrambles] = useState(initialScrambles);
   const [aMethodF, setAMethodF] = useState("all");
   const [aStatusF, setAStatusF] = useState("all");
   const [vFilter, setVFilter] = useState("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const videoTags = [
     ...new Set(
@@ -215,12 +226,29 @@ export function LibraryClient({
     if ("error" in res) setBookmarks(prev);
   }
 
+  async function confirmDeleteScramble() {
+    if (!pendingDeleteId) return;
+    setDeleting(true);
+    const prev = scrambles;
+    setScrambles((ss) => ss.filter((s) => s.id !== pendingDeleteId));
+    await deleteSavedScramble(pendingDeleteId).catch(() => setScrambles(prev));
+    setPendingDeleteId(null);
+    setDeleting(false);
+  }
+
   async function handleCopy(id: string, scramble: string) {
     await navigator.clipboard.writeText(scramble);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 1500);
   }
 
+  const tabs: { id: TabId; label: string; count: number }[] = [
+    { id: "analyses", label: "Analyses", count: analyses.length },
+    { id: "videos", label: "Videos", count: bookmarks.length },
+    { id: "scrambles", label: "Scrambles", count: scrambles.length },
+  ];
+
+  // Export uses stateful scrambles so it reflects any unsaves
   function handleExport() {
     const text = scrambles.map((s) => s.scramble).join("\n");
     const blob = new Blob([text], { type: "text/plain" });
@@ -231,12 +259,6 @@ export function LibraryClient({
     a.click();
     URL.revokeObjectURL(url);
   }
-
-  const tabs: { id: TabId; label: string; count: number }[] = [
-    { id: "analyses", label: "Analyses", count: analyses.length },
-    { id: "videos", label: "Videos", count: bookmarks.length },
-    { id: "scrambles", label: "Scrambles", count: scrambles.length },
-  ];
 
   return (
     <div
@@ -968,9 +990,8 @@ export function LibraryClient({
 
             {scrambles.length === 0 ? (
               <EmptyDashed
-                icon="🔀"
                 title="No scrambles saved."
-                subtitle="Scrambles are saved automatically when you use the timer."
+                subtitle="Use the bookmark icon on the timer to save a scramble."
               />
             ) : (
               scrambles.map((s, idx) => (
@@ -1037,7 +1058,7 @@ export function LibraryClient({
                         color: "var(--text-dimmer)",
                       }}
                     >
-                      3×3
+                      {s.puzzle}
                     </span>
 
                     <span
@@ -1049,6 +1070,41 @@ export function LibraryClient({
                     >
                       {fmtDate(s.created_at)}
                     </span>
+
+                    <button
+                      type="button"
+                      aria-label="Unsave scramble"
+                      onClick={() => setPendingDeleteId(s.id)}
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "7px",
+                        background: "transparent",
+                        border: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        color: "var(--text-dimmer)",
+                        flexShrink: 0,
+                      }}
+                      className="lib-copy-btn"
+                    >
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M9 3L3 9M3 3l6 6"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
 
                     <button
                       type="button"
@@ -1117,6 +1173,18 @@ export function LibraryClient({
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDeleteId}
+        title="Remove scramble?"
+        description="This scramble will be removed from your library."
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        destructive
+        disabled={deleting}
+        onConfirm={confirmDeleteScramble}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   );
 }

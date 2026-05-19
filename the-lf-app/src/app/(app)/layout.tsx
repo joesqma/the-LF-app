@@ -1,10 +1,10 @@
-import { Sidebar } from "~/components/layout/Sidebar";
+import { AppShell } from "~/components/layout/AppShell";
+import { SidebarProvider } from "~/lib/sidebar-context";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
-    </div>
+    <SidebarProvider>
+      <AppShell>{children}</AppShell>
+    </SidebarProvider>
   );
 }

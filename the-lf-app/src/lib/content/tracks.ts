@@ -1,5 +1,6 @@
 import { CFOP_PHASES, cfopLessons } from "./cfop";
 import { COMP_PREP_PHASES, compPrepLessons } from "./comp-prep";
+import { FIRST_SOLVE_STEPS } from "./first-solve";
 import { GETTING_FASTER_PHASES, gettingFasterLessons } from "./getting-faster";
 import { ROUX_PHASES, rouxLessons } from "./roux";
 import type { Lesson, LessonState, LessonWithState } from "./types";
@@ -159,6 +160,14 @@ export function getTrackProgress(
   trackId: TrackId,
   completedIds: Set<string>,
 ): { done: number; total: number } {
+  if (trackId === "first-solve") {
+    return {
+      done: FIRST_SOLVE_STEPS.filter((s) =>
+        completedIds.has(`first-solve-${s.id}`),
+      ).length,
+      total: FIRST_SOLVE_STEPS.length,
+    };
+  }
   const lessons = TRACK_LESSONS[trackId] ?? [];
   return {
     done: lessons.filter((l) => completedIds.has(l.id)).length,

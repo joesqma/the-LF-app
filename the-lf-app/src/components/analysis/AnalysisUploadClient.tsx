@@ -6,7 +6,7 @@ import { VideoUploader } from "~/components/analysis/VideoUploader";
 
 interface Props {
   userId: string;
-  initialMethod: "cfop" | "roux";
+  initialMethod: "cfop" | "roux" | "beginner";
   usedThisMonth: number;
   usageLimit: number;
 }
@@ -45,7 +45,10 @@ export function AnalysisUploadClient({
   usedThisMonth,
   usageLimit,
 }: Props) {
-  const [method, setMethod] = useState<"cfop" | "roux">(initialMethod);
+  const [method, setMethod] = useState<"cfop" | "roux" | "beginner">(
+    initialMethod,
+  );
+  const [scramble, setScramble] = useState("");
   const [tipsOpen, setTipsOpen] = useState(true);
 
   const canUpload = usedThisMonth < usageLimit;
@@ -68,7 +71,7 @@ export function AnalysisUploadClient({
           Solving method
         </p>
         <div style={{ display: "flex", gap: "8px" }}>
-          {(["cfop", "roux"] as const).map((m) => (
+          {(["cfop", "roux", "beginner"] as const).map((m) => (
             <button
               key={m}
               type="button"
@@ -86,8 +89,53 @@ export function AnalysisUploadClient({
         </div>
       </div>
 
+      {/* Scramble input */}
+      <div style={{ marginBottom: "24px" }}>
+        <p
+          className="font-dm-sans"
+          style={{
+            fontSize: "11px",
+            fontWeight: 500,
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            color: "var(--text-dimmer)",
+            marginBottom: "10px",
+          }}
+        >
+          Scramble{" "}
+          <span
+            style={{ fontWeight: 300, textTransform: "none", letterSpacing: 0 }}
+          >
+            (optional)
+          </span>
+        </p>
+        <input
+          type="text"
+          value={scramble}
+          onChange={(e) => setScramble(e.target.value)}
+          placeholder="e.g. R U R' U' F2 D …"
+          className="font-dm-sans"
+          style={{
+            width: "100%",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border)",
+            borderRadius: "10px",
+            padding: "10px 14px",
+            fontSize: "13px",
+            color: "var(--text-secondary)",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+
       {/* Video uploader */}
-      <VideoUploader userId={userId} method={method} canUpload={canUpload} />
+      <VideoUploader
+        userId={userId}
+        method={method}
+        canUpload={canUpload}
+        scramble={scramble}
+      />
 
       {/* Divider */}
       <div

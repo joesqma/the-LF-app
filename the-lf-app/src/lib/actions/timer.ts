@@ -33,6 +33,15 @@ export async function renameSession(sessionId: string, name: string) {
   if (error) throw error;
 }
 
+export async function updateSessionPuzzle(sessionId: string, puzzle: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("solve_sessions")
+    .update({ puzzle })
+    .eq("id", sessionId);
+  if (error) throw error;
+}
+
 export async function deleteSession(sessionId: string) {
   const supabase = await createClient();
   const { error } = await supabase
@@ -48,6 +57,7 @@ export async function saveSolve(
   timeMs: number,
   scramble: string,
   penalty?: "+2" | "dnf" | null,
+  method?: string | null,
 ) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -58,6 +68,7 @@ export async function saveSolve(
       time_ms: timeMs,
       scramble,
       penalty: penalty ?? null,
+      method: method ?? null,
     })
     .select()
     .single();

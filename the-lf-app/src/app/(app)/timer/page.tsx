@@ -3,6 +3,7 @@
 import { Bookmark, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CubeNet } from "~/components/timer/CubeNet";
+import { CubeNet2x2 } from "~/components/timer/CubeNet2x2";
 import { ImportButton } from "~/components/timer/ImportButton";
 import type { Solve } from "~/components/timer/SessionPanel";
 import { SessionPanel } from "~/components/timer/SessionPanel";
@@ -23,8 +24,10 @@ import {
   renameSession,
   saveScrambleToLibrary,
   saveSolve,
+  updateSessionPuzzle,
   updateSolvePenalty,
 } from "~/lib/actions/timer";
+import { useSidebar } from "~/lib/sidebar-context";
 import { cn } from "~/lib/utils";
 import type { Database } from "~/types/database";
 import { generateScrambleForPuzzle, type Puzzle } from "~/utils/scrambleMulti";
@@ -34,23 +37,23 @@ import { generateScrambleForPuzzle, type Puzzle } from "~/utils/scrambleMulti";
 const STORAGE_KEY = "cubewise_timer_prefs";
 
 interface StoredPrefs {
-  activePuzzle: Puzzle;
+  sessionPuzzles: Record<string, Puzzle>;
   settings: TimerSettings;
 }
 
 function loadPrefs(): StoredPrefs {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { activePuzzle: "3×3", settings: DEFAULT_SETTINGS };
+    if (!raw) return { sessionPuzzles: {}, settings: DEFAULT_SETTINGS };
     const parsed = JSON.parse(raw) as Partial<StoredPrefs>;
     return {
-      activePuzzle: parsed.activePuzzle ?? "3×3",
+      sessionPuzzles: (parsed.sessionPuzzles as Record<string, Puzzle>) ?? {},
       settings: parsed.settings
         ? { ...DEFAULT_SETTINGS, ...parsed.settings }
         : DEFAULT_SETTINGS,
     };
   } catch {
-    return { activePuzzle: "3×3", settings: DEFAULT_SETTINGS };
+    return { sessionPuzzles: {}, settings: DEFAULT_SETTINGS };
   }
 }
 
@@ -144,7 +147,7 @@ function parseTypeInTime(raw: string): number | null {
 const PHASE_COLOR: Record<TimerPhase, string> = {
   idle: "text-foreground",
   done: "text-foreground",
-  holding: "text-foreground/50",
+  holding: "text-red-400 dark:text-red-400",
   ready: "text-green-400 dark:text-green-400",
   running: "text-foreground",
   inspecting: "text-foreground",
@@ -154,6 +157,7 @@ const PHASE_COLOR: Record<TimerPhase, string> = {
 
 export default function TimerPage() {
   const { user } = useUser();
+  const { setHidden: setSidebarHidden } = useSidebar();
 
   // ── db state ─────────────────────────────────────────────────────────────
 
@@ -163,14 +167,22 @@ export default function TimerPage() {
 
   // ── local prefs state ─────────────────────────────────────────────────────
 
-  const [activePuzzle, setActivePuzzle] = useState<Puzzle>("3×3");
+  const [sessionPuzzles, setSessionPuzzles] = useState<Record<string, Puzzle>>(
+    {},
+  );
+  const sessionPuzzlesRef = useRef<Record<string, Puzzle>>({});
+  sessionPuzzlesRef.current = sessionPuzzles;
+  const activePuzzle: Puzzle = activeSessionId
+    ? (sessionPuzzles[activeSessionId] ?? "3×3")
+    : "3×3";
+
   const [settings, setSettings] = useState<TimerSettings>(DEFAULT_SETTINGS);
   const [hydrated, setHydrated] = useState(false);
 
   // Load prefs from localStorage
   useEffect(() => {
     const prefs = loadPrefs();
-    setActivePuzzle(prefs.activePuzzle);
+    setSessionPuzzles(prefs.sessionPuzzles);
     setSettings(prefs.settings);
     setHydrated(true);
   }, []);
@@ -180,9 +192,22 @@ export default function TimerPage() {
     if (!hydrated) return;
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ activePuzzle, settings }),
+      JSON.stringify({ sessionPuzzles, settings }),
     );
-  }, [hydrated, activePuzzle, settings]);
+  }, [hydrated, sessionPuzzles, settings]);
+
+  // One-time sync: push any localStorage puzzle assignments to the DB
+  // so existing sessions get the correct puzzle even before new solves are recorded.
+  const puzzleSyncedRef = useRef(false);
+  useEffect(() => {
+    if (!hydrated || dbSessions.length === 0 || puzzleSyncedRef.current) return;
+    puzzleSyncedRef.current = true;
+    for (const [sid, puzzle] of Object.entries(sessionPuzzles)) {
+      if (dbSessions.some((s) => s.id === sid)) {
+        updateSessionPuzzle(sid, puzzle).catch(() => {});
+      }
+    }
+  }, [hydrated, dbSessions, sessionPuzzles]);
 
   // ── load sessions when user is available ─────────────────────────────────
 
@@ -214,6 +239,17 @@ export default function TimerPage() {
     generateScrambleForPuzzle("3×3"),
   );
   const [scrambleHistory, setScrambleHistory] = useState<string[]>([]);
+
+  // When switching sessions, update scramble to match that session's event
+  const prevActiveSessionIdRef = useRef<string>("");
+  useEffect(() => {
+    if (!hydrated || !activeSessionId) return;
+    if (prevActiveSessionIdRef.current === activeSessionId) return;
+    prevActiveSessionIdRef.current = activeSessionId;
+    const puzzle = sessionPuzzlesRef.current[activeSessionId] ?? "3×3";
+    setScramble(generateScrambleForPuzzle(puzzle));
+    setScrambleHistory([]);
+  }, [hydrated, activeSessionId]);
 
   function nextScramble(puzzle = activePuzzle) {
     setScrambleHistory((h) => [scramble, ...h].slice(0, 50));
@@ -300,6 +336,7 @@ export default function TimerPage() {
   const recordSolve = useCallback((timeSecs: number) => {
     const {
       activeSessionId: sid,
+      activePuzzle: puzzle,
       scramble: scr,
       userId,
     } = activeSolveRefs.current;
@@ -315,14 +352,14 @@ export default function TimerPage() {
       time_ms: timeMs,
       penalty: null,
       scramble: scr,
-      method: null,
+      method: puzzle,
       notes: null,
       created_at: new Date().toISOString(),
     };
     setDbSolves((prev) => [optimistic, ...prev]);
 
     // Persist and swap optimistic row with real DB row
-    saveSolve(sid, userId, timeMs, scr)
+    saveSolve(sid, userId, timeMs, scr, undefined, puzzle)
       .then((saved) =>
         setDbSolves((prev) =>
           prev.map((s) => (s.id === optimistic.id ? saved : s)),
@@ -437,6 +474,19 @@ export default function TimerPage() {
     };
   }, []);
 
+  // Any key (except Space, handled above) stops the timer while it is running.
+  useEffect(() => {
+    if (phase !== "running") return;
+    function onAnyKey(e: KeyboardEvent) {
+      if (e.repeat || e.code === "Space") return;
+      if ((e.target as HTMLElement).tagName === "INPUT") return;
+      e.preventDefault();
+      handlersRef.current.handleDown();
+    }
+    window.addEventListener("keydown", onAnyKey);
+    return () => window.removeEventListener("keydown", onAnyKey);
+  }, [phase]);
+
   // ── type-in mode ──────────────────────────────────────────────────────────
 
   function handleTypeIn() {
@@ -473,6 +523,11 @@ export default function TimerPage() {
 
   async function handleDeleteSession(id: string) {
     await deleteSession(id);
+    setSessionPuzzles((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
     setDbSessions((prev) => {
       const next = prev.filter((s) => s.id !== id);
       if (activeSessionId === id && next.length > 0) {
@@ -495,7 +550,10 @@ export default function TimerPage() {
   }
 
   function handlePuzzleChange(puzzle: Puzzle) {
-    setActivePuzzle(puzzle);
+    if (activeSessionId) {
+      setSessionPuzzles((prev) => ({ ...prev, [activeSessionId]: puzzle }));
+      updateSessionPuzzle(activeSessionId, puzzle).catch(() => {});
+    }
     nextScramble(puzzle);
     if (phaseRef.current === "running") clearInterval_();
     syncPhase("idle");
@@ -531,10 +589,12 @@ export default function TimerPage() {
 
   const focusMode =
     settings.inputMethod === "timer" &&
-    (phase === "holding" ||
-      phase === "ready" ||
-      phase === "inspecting" ||
-      phase === "running");
+    (phase === "inspecting" || phase === "running");
+
+  useEffect(() => {
+    setSidebarHidden(phase === "running");
+    return () => setSidebarHidden(false);
+  }, [phase, setSidebarHidden]);
 
   if (!hydrated) return null;
 
@@ -553,188 +613,195 @@ export default function TimerPage() {
         if ((e.target as HTMLElement).tagName !== "INPUT") handleUp();
       }}
     >
-      {focusMode ? (
-        /* Focus mode: only the timer, aligned with normal mode position */
-        <div className="flex h-full select-none items-center justify-center touch-none pt-14">
-          {phase === "inspecting" ? (
-            <div
-              className={cn(
-                "font-mono font-light tabular-nums leading-none tracking-tight",
-                "text-[80px]",
-                inspectionRemaining > 3
-                  ? "text-foreground"
-                  : "text-red-400 dark:text-red-400",
-              )}
-              style={{ letterSpacing: "-3px" }}
-            >
-              {Math.ceil(inspectionRemaining)}
+      {/* Top bar — fades out when timer is running/inspecting */}
+      <div
+        className={cn(
+          "transition-opacity duration-150",
+          focusMode && "opacity-0 pointer-events-none",
+        )}
+      >
+        <TimerTopBar
+          activePuzzle={activePuzzle}
+          activeSession={
+            uiSessions.find((s) => s.id === activeSessionId) ??
+            uiSessions[0] ?? { id: "", name: "Loading…", createdAt: 0 }
+          }
+          sessions={uiSessions}
+          onPuzzleChange={handlePuzzleChange}
+          onSessionChange={handleSessionChange}
+          onCreateSession={handleCreateSession}
+          onRenameSession={handleRenameSession}
+          onDeleteSession={handleDeleteSession}
+          onOpenSettings={() => setSettingsOpen(true)}
+          importSlot={
+            user ? (
+              <ImportButton
+                userId={user.id}
+                onImportComplete={handleImportComplete}
+              />
+            ) : null
+          }
+        />
+      </div>
+
+      {/* Body: center + right panel */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Timer center */}
+        <div className="relative flex flex-1 select-none flex-col touch-none">
+          {/* Timer display — absolute so it stays perfectly centered regardless of what fades around it */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
+            {settings.inputMethod === "typing" ? (
+              /* Type-in mode */
+              <div className="flex flex-col items-center gap-4">
+                <input
+                  ref={typeInInputRef}
+                  type="text"
+                  value={typeInValue}
+                  onChange={(e) => setTypeInValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleTypeIn();
+                    if (e.key === "Escape") setTypeInValue("");
+                  }}
+                  placeholder="1220 or 12.34"
+                  className="w-48 rounded-lg border border-border bg-transparent px-4 py-2 text-center font-mono text-2xl text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                />
+                {typeInValue &&
+                  (() => {
+                    const preview = parseTypeInTime(typeInValue);
+                    return (
+                      <span className="font-mono text-sm text-muted-foreground">
+                        {preview !== null ? fmtSecs(preview) : "invalid"}
+                      </span>
+                    );
+                  })()}
+                <button
+                  type="button"
+                  onClick={handleTypeIn}
+                  className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                >
+                  Save
+                </button>
+              </div>
+            ) : phase === "inspecting" ? (
+              /* Inspection countdown */
+              <div
+                className={cn(
+                  "font-mono font-light tabular-nums leading-none tracking-tight",
+                  "text-[80px]",
+                  inspectionRemaining > 3
+                    ? "text-foreground"
+                    : "text-red-400 dark:text-red-400",
+                )}
+                style={{ letterSpacing: "-3px" }}
+              >
+                {Math.ceil(inspectionRemaining)}
+              </div>
+            ) : (
+              /* Spacebar mode */
+              <div
+                className={cn(
+                  "font-mono font-light tabular-nums leading-none tracking-tight transition-colors duration-75",
+                  "text-[80px]",
+                  PHASE_COLOR[phase],
+                )}
+                style={{ letterSpacing: "-3px" }}
+              >
+                {fmtSecs(displaySecs)}
+              </div>
+            )}
+          </div>
+
+          {/* Scramble bar — fades out when running/inspecting */}
+          <div
+            className={cn(
+              "relative z-10 flex flex-col items-center justify-center gap-2 bg-background px-6 py-3 transition-opacity duration-150",
+              focusMode && "opacity-0 pointer-events-none",
+            )}
+          >
+            <p className="max-w-4xl whitespace-pre-wrap text-center font-mono text-base leading-relaxed tracking-wide text-foreground sm:text-lg">
+              {scramble}
+            </p>
+            <div className="flex shrink-0 items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={prevScramble}
+                disabled={scrambleHistory.length === 0}
+                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-30"
+                title="Previous scramble"
+              >
+                <RefreshCw className="h-3.5 w-3.5 -scale-x-100" />
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveScramble}
+                disabled={!user || scrambleSaved}
+                className={cn(
+                  "rounded-md p-1 transition-colors disabled:opacity-30",
+                  scrambleSaved
+                    ? "text-orange-400"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+                title={
+                  scrambleSaved
+                    ? "Saved to library"
+                    : "Save scramble to library"
+                }
+              >
+                <Bookmark
+                  className={cn("h-3.5 w-3.5", scrambleSaved && "fill-current")}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={() => nextScramble()}
+                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                title="Next scramble"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </button>
             </div>
-          ) : (
-            <div
-              className={cn(
-                "font-mono font-light tabular-nums leading-none tracking-tight transition-colors duration-75",
-                "text-[80px]",
-                PHASE_COLOR[phase],
-              )}
-              style={{ letterSpacing: "-3px" }}
-            >
-              {fmtSecs(displaySecs)}
+          </div>
+
+          {/* Cube net — hidden when running/inspecting */}
+          {settings.showCubeNet && !focusMode && (
+            <div className="absolute bottom-4 right-4">
+              <div
+                className={cn(
+                  "rounded-xl border border-border bg-card p-3 shadow-[8px_8px_0px_hsl(var(--border))]",
+                  activePuzzle === "2×2"
+                    ? "h-[160px] w-[200px]"
+                    : "h-[220px] w-[300px]",
+                )}
+              >
+                <div className="flex h-full w-full items-center justify-center overflow-hidden">
+                  {activePuzzle === "2×2" ? (
+                    <CubeNet2x2 scramble={scramble} scale={1.2} />
+                  ) : (
+                    <CubeNet scramble={scramble} scale={1.2} />
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
-      ) : (
-        /* Normal mode */
-        <>
-          {/* Top bar */}
-          <TimerTopBar
-            activePuzzle={activePuzzle}
-            activeSession={
-              uiSessions.find((s) => s.id === activeSessionId) ??
-              uiSessions[0] ?? { id: "", name: "Loading…", createdAt: 0 }
-            }
-            sessions={uiSessions}
-            onPuzzleChange={handlePuzzleChange}
-            onSessionChange={handleSessionChange}
-            onCreateSession={handleCreateSession}
-            onRenameSession={handleRenameSession}
-            onDeleteSession={handleDeleteSession}
-            onOpenSettings={() => setSettingsOpen(true)}
-            importSlot={
-              user ? (
-                <ImportButton
-                  userId={user.id}
-                  onImportComplete={handleImportComplete}
-                />
-              ) : null
-            }
-          />
 
-          {/* Body: center + right panel */}
-          <div className="flex flex-1 overflow-hidden">
-            {/* Timer center */}
-            <div className="relative flex flex-1 select-none flex-col touch-none">
-              {/* Timer display — absolute so it centers over the full area */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
-                {settings.inputMethod === "typing" ? (
-                  /* Type-in mode */
-                  <div className="flex flex-col items-center gap-4">
-                    <input
-                      ref={typeInInputRef}
-                      type="text"
-                      value={typeInValue}
-                      onChange={(e) => setTypeInValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleTypeIn();
-                        if (e.key === "Escape") setTypeInValue("");
-                      }}
-                      placeholder="1220 or 12.34"
-                      className="w-48 rounded-lg border border-border bg-transparent px-4 py-2 text-center font-mono text-2xl text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
-                    />
-                    {typeInValue &&
-                      (() => {
-                        const preview = parseTypeInTime(typeInValue);
-                        return (
-                          <span className="font-mono text-sm text-muted-foreground">
-                            {preview !== null ? fmtSecs(preview) : "invalid"}
-                          </span>
-                        );
-                      })()}
-                    <button
-                      type="button"
-                      onClick={handleTypeIn}
-                      className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                    >
-                      Save
-                    </button>
-                  </div>
-                ) : (
-                  /* Spacebar mode */
-                  <div
-                    className={cn(
-                      "font-mono font-light tabular-nums leading-none tracking-tight transition-colors duration-75",
-                      "text-[80px]",
-                      PHASE_COLOR[phase],
-                    )}
-                    style={{ letterSpacing: "-3px" }}
-                  >
-                    {fmtSecs(displaySecs)}
-                  </div>
-                )}
-              </div>
-
-              {/* Scramble bar — relative z-10 so it sits above the absolute timer display */}
-              <div className="relative z-10 flex flex-col items-center justify-center gap-2 bg-background px-6 py-3">
-                <p className="max-w-4xl whitespace-pre-wrap text-center font-mono text-base leading-relaxed tracking-wide text-foreground sm:text-lg">
-                  {scramble}
-                </p>
-                <div className="flex shrink-0 items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={prevScramble}
-                    disabled={scrambleHistory.length === 0}
-                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-30"
-                    title="Previous scramble"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5 -scale-x-100" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveScramble}
-                    disabled={!user || scrambleSaved}
-                    className={cn(
-                      "rounded-md p-1 transition-colors disabled:opacity-30",
-                      scrambleSaved
-                        ? "text-orange-400"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                    )}
-                    title={
-                      scrambleSaved
-                        ? "Saved to library"
-                        : "Save scramble to library"
-                    }
-                  >
-                    <Bookmark
-                      className={cn(
-                        "h-3.5 w-3.5",
-                        scrambleSaved && "fill-current",
-                      )}
-                    />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => nextScramble()}
-                    className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    title="Next scramble"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Cube net — bottom right */}
-              {settings.showCubeNet && activePuzzle === "3×3" && (
-                <div className="absolute bottom-4 right-4">
-                  <div className="h-[220px] w-[300px] rounded-xl border border-border bg-card p-3 shadow-[8px_8px_0px_hsl(var(--border))]">
-                    <div className="flex h-full w-full items-center justify-center overflow-hidden">
-                      <CubeNet scramble={scramble} scale={1.2} />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Session panel (original UI) */}
-            {activeSession && (
-              <SessionPanel
-                sessionName={activeSession.name}
-                solves={dbSolves.map(dbSolveToUi)}
-                onDeleteSolve={handleDeleteSolve}
-                onSetPenalty={handleSetPenalty}
-              />
-            )}
-          </div>
-        </>
-      )}
+        {/* Session panel — fades out when running/inspecting */}
+        <div
+          className={cn(
+            "transition-opacity duration-150",
+            focusMode && "opacity-0 pointer-events-none",
+          )}
+        >
+          {activeSession && (
+            <SessionPanel
+              sessionName={activeSession.name}
+              solves={dbSolves.map(dbSolveToUi)}
+              onDeleteSolve={handleDeleteSolve}
+              onSetPenalty={handleSetPenalty}
+            />
+          )}
+        </div>
+      </div>
 
       {/* Settings modal */}
       {settingsOpen && (

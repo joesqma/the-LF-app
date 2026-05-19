@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { saveBookmark } from "~/lib/actions/bookmarks";
 import type { Lesson } from "~/lib/content/types";
+import type { Recommendation } from "~/lib/recommendations";
 
 const TRACK_LABEL: Record<Lesson["track"], string> = {
   cfop: "CFOP",
@@ -13,15 +14,39 @@ const TRACK_LABEL: Record<Lesson["track"], string> = {
 };
 
 interface Props {
-  lesson: Lesson;
+  recommendation: Recommendation;
+  dontKnowHref: string;
 }
 
-export function RecommendedLessonCard({ lesson }: Props) {
+// ── Non-lesson variants ──────────────────────────────────────────────────────
+
+const ACTION_CONTENT = {
+  analysis: {
+    title: "Upload your first solve",
+    description:
+      "Record a solve and get a frame-by-frame AI breakdown of your cross, F2L, OLL, and PLL — with specific drills to fix what's slowing you down.",
+    href: "/analysis",
+    cta: "Start analysis →",
+    meta: "AI ANALYSIS",
+  },
+  timer: {
+    title: "Log your first solve",
+    description:
+      "Use the built-in timer to record solves and track your progress over time. Your averages update automatically.",
+    href: "/timer",
+    cta: "Open timer →",
+    meta: "TIMER",
+  },
+} as const;
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-  const firstVideo = lesson.videos[0];
 
-  async function handleSave() {
+  async function handleSave(lesson: Lesson) {
+    const firstVideo = lesson.videos[0];
     if (saved || saving || !firstVideo) return;
     setSaving(true);
     await saveBookmark({
@@ -35,10 +60,22 @@ export function RecommendedLessonCard({ lesson }: Props) {
     setSaving(false);
   }
 
-  const trackLabel = TRACK_LABEL[lesson.track];
+  const isLesson = recommendation.kind === "lesson";
+  const action = !isLesson ? ACTION_CONTENT[recommendation.kind] : null;
+
+  const href = isLesson
+    ? `/learn/${recommendation.lesson.track}/${recommendation.lesson.id}`
+    : (action?.href ?? "/");
+
+  const meta = isLesson
+    ? `${TRACK_LABEL[recommendation.lesson.track]} · ~${recommendation.lesson.estimatedMinutes} MIN`
+    : action?.meta;
 
   return (
-    <div className="db-rec-card py-6 px-5 md:py-[32px] md:px-[36px]">
+    <div
+      className="db-rec-card py-6 px-5 md:py-[32px] md:px-[36px]"
+      style={{ marginBottom: "40px" }}
+    >
       {/* Top accent gradient line */}
       <div
         aria-hidden="true"
@@ -70,7 +107,7 @@ export function RecommendedLessonCard({ lesson }: Props) {
         }}
       />
 
-      {/* Tag pill — meta label sits here in flow on mobile, absolute on desktop */}
+      {/* Header row: AI label + meta */}
       <div style={{ marginBottom: "16px" }}>
         <div className="flex items-center" style={{ gap: "6px" }}>
           <span
@@ -94,7 +131,7 @@ export function RecommendedLessonCard({ lesson }: Props) {
               letterSpacing: "0.1em",
             }}
           >
-            Recommended for you
+            AI Recommendation
           </span>
         </div>
 
@@ -106,11 +143,23 @@ export function RecommendedLessonCard({ lesson }: Props) {
             letterSpacing: "0.06em",
           }}
         >
-          <span className="text-[11px] md:text-[12px]">
-            {trackLabel} · ~{lesson.estimatedMinutes} MIN
-          </span>
+          <span className="text-[11px] md:text-[12px]">{meta}</span>
         </p>
       </div>
+
+      {/* Reason pill */}
+      <p
+        className="font-dm-sans"
+        style={{
+          fontSize: "12px",
+          fontWeight: 400,
+          color: "var(--text-dimmer)",
+          marginBottom: "10px",
+          fontStyle: "italic",
+        }}
+      >
+        {recommendation.reason}
+      </p>
 
       {/* Title */}
       <h3
@@ -124,7 +173,7 @@ export function RecommendedLessonCard({ lesson }: Props) {
           marginBottom: "10px",
         }}
       >
-        {lesson.title}
+        {isLesson ? recommendation.lesson.title : action?.title}
       </h3>
 
       {/* Description */}
@@ -139,26 +188,48 @@ export function RecommendedLessonCard({ lesson }: Props) {
           marginBottom: "28px",
         }}
       >
-        {lesson.description}
+        {isLesson ? recommendation.lesson.description : action?.description}
       </p>
 
       {/* Actions */}
-      <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-        <Link
-          href={`/learn/${lesson.track}/${lesson.id}`}
-          className="db-primary-btn font-dm-sans"
-        >
-          Start lesson
+      <div
+        style={{
+          display: "flex",
+          gap: "12px",
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
+        <Link href={href} className="db-primary-btn font-dm-sans">
+          {isLesson ? "Start lesson" : action?.cta}
         </Link>
-        <button
-          type="button"
-          data-saved={saved}
-          onClick={handleSave}
-          disabled={saving}
-          className="db-ghost-btn font-dm-sans"
+
+        {isLesson && (
+          <button
+            type="button"
+            data-saved={saved}
+            onClick={() => handleSave(recommendation.lesson)}
+            disabled={saving}
+            className="db-ghost-btn font-dm-sans"
+          >
+            {saving ? "Saving…" : saved ? "Saved" : "Save for later"}
+          </button>
+        )}
+
+        <Link
+          href={dontKnowHref}
+          className="font-dm-sans"
+          style={{
+            fontSize: "12px",
+            fontWeight: 400,
+            color: "var(--text-dimmer)",
+            textDecoration: "none",
+            marginLeft: "auto",
+            whiteSpace: "nowrap",
+          }}
         >
-          {saving ? "Saving…" : saved ? "Saved" : "Save for later"}
-        </button>
+          Don&apos;t know where to start?
+        </Link>
       </div>
     </div>
   );

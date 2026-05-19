@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "~/lib/supabase/server";
+import { FREE_LIMITS } from "~/lib/tier";
 
 interface SaveBookmarkParams {
   videoUrl: string;
@@ -28,6 +29,14 @@ export async function saveBookmark(
     .maybeSingle();
 
   if (existing) return { success: true };
+
+  const { count } = await supabase
+    .from("bookmarks")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id);
+  if ((count ?? 0) >= FREE_LIMITS.bookmarks) {
+    return { error: "bookmark_limit_reached" };
+  }
 
   const { error } = await supabase.from("bookmarks").insert({
     user_id: user.id,
