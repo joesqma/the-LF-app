@@ -8,7 +8,6 @@ import type { Recommendation } from "~/lib/recommendations";
 
 const TRACK_LABEL: Record<Lesson["track"], string> = {
   cfop: "CFOP",
-  roux: "ROUX",
   "comp-prep": "COMP PREP",
   "getting-faster": "GETTING FASTER",
 };
@@ -18,28 +17,31 @@ interface Props {
   dontKnowHref: string;
 }
 
-// ── Non-lesson variants ──────────────────────────────────────────────────────
-
 const ACTION_CONTENT = {
   analysis: {
     title: "Upload your first solve",
     description:
       "Record a solve and get a frame-by-frame AI breakdown of your cross, F2L, OLL, and PLL — with specific drills to fix what's slowing you down.",
     href: "/analysis",
-    cta: "Start analysis →",
-    meta: "AI ANALYSIS",
+    cta: "Start analysis",
+    meta: ["AI ANALYSIS", "~5 min", "Any level"],
   },
   timer: {
     title: "Log your first solve",
     description:
       "Use the built-in timer to record solves and track your progress over time. Your averages update automatically.",
     href: "/timer",
-    cta: "Open timer →",
-    meta: "TIMER",
+    cta: "Open timer",
+    meta: ["TIMER", "Ongoing", "Any level"],
   },
 } as const;
 
-// ── Component ────────────────────────────────────────────────────────────────
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
 
 export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
   const [saved, setSaved] = useState(false);
@@ -67,16 +69,35 @@ export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
     ? `/learn/${recommendation.lesson.track}/${recommendation.lesson.id}`
     : (action?.href ?? "/");
 
-  const meta = isLesson
-    ? `${TRACK_LABEL[recommendation.lesson.track]} · ~${recommendation.lesson.estimatedMinutes} MIN`
-    : action?.meta;
+  const metaPills: string[] = isLesson
+    ? [
+        TRACK_LABEL[recommendation.lesson.track],
+        `~${recommendation.lesson.estimatedMinutes} min`,
+        "Beginner",
+      ]
+    : ((action?.meta as unknown as string[]) ?? []);
+
+  const title = isLesson ? recommendation.lesson.title : (action?.title ?? "");
+  const description = isLesson
+    ? recommendation.lesson.description
+    : (action?.description ?? "");
+  const cta = isLesson ? "Start lesson" : (action?.cta ?? "Start");
 
   return (
     <div
-      className="db-rec-card py-6 px-5 md:py-[32px] md:px-[36px]"
-      style={{ marginBottom: "40px" }}
+      style={{
+        position: "relative",
+        background: "var(--s1)",
+        border: "0.5px solid var(--b2)",
+        borderRadius: "14px",
+        overflow: "hidden",
+        display: "grid",
+        gridTemplateColumns: "1fr auto",
+        gap: "24px",
+        padding: "24px",
+      }}
     >
-      {/* Top accent gradient line */}
+      {/* 2px accent bar flush to top */}
       <div
         aria-hidden="true"
         style={{
@@ -84,32 +105,22 @@ export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
           top: 0,
           left: 0,
           right: 0,
-          height: "1px",
-          background:
-            "linear-gradient(90deg, transparent, #3b82f6 40%, #8b5cf6 70%, transparent)",
-          opacity: 0.7,
+          height: "2px",
+          background: "var(--blue)",
         }}
       />
 
-      {/* Corner glow */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: "-60px",
-          right: "-60px",
-          width: "220px",
-          height: "220px",
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Header row: AI label + meta */}
-      <div style={{ marginBottom: "16px" }}>
-        <div className="flex items-center" style={{ gap: "6px" }}>
+      {/* Left: content */}
+      <div style={{ minWidth: 0 }}>
+        {/* Eyebrow chip */}
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            marginBottom: "8px",
+          }}
+        >
           <span
             aria-hidden="true"
             style={{
@@ -117,119 +128,141 @@ export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
               width: "6px",
               height: "6px",
               borderRadius: "50%",
-              background: "var(--accent-blue)",
+              background: "var(--blue)",
               flexShrink: 0,
             }}
           />
           <span
-            className="font-dm-sans"
             style={{
-              color: "var(--accent-blue)",
-              fontSize: "11px",
-              fontWeight: 500,
+              ...mono,
+              fontSize: "10px",
+              fontWeight: 600,
               textTransform: "uppercase",
-              letterSpacing: "0.1em",
+              letterSpacing: "2px",
+              color: "var(--blue)",
             }}
           >
             AI Recommendation
           </span>
         </div>
 
+        {/* Context / reason */}
         <p
-          className="mt-2 font-dm-sans md:absolute md:top-[32px] md:right-[36px]"
           style={{
-            color: "var(--text-dimmer)",
+            ...sans,
+            fontSize: "11px",
             fontWeight: 400,
-            letterSpacing: "0.06em",
+            color: "var(--t3)",
+            marginBottom: "8px",
+            lineHeight: 1.4,
           }}
         >
-          <span className="text-[11px] md:text-[12px]">{meta}</span>
+          {recommendation.reason}
         </p>
+
+        {/* Title */}
+        <h3
+          style={{
+            ...sans,
+            fontSize: "23px",
+            fontWeight: 700,
+            letterSpacing: "-0.5px",
+            lineHeight: 1.15,
+            color: "var(--t1)",
+            marginBottom: "8px",
+          }}
+        >
+          {title}
+        </h3>
+
+        {/* Description */}
+        <p
+          style={{
+            ...sans,
+            fontSize: "13px",
+            fontWeight: 400,
+            color: "var(--t2)",
+            lineHeight: 1.65,
+            marginBottom: "20px",
+            maxWidth: "540px",
+          }}
+        >
+          {description}
+        </p>
+
+        {/* Button row */}
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link href={href} className="cb-primary-btn">
+            {cta}
+          </Link>
+
+          {isLesson && (
+            <button
+              type="button"
+              data-saved={saved}
+              onClick={() => handleSave(recommendation.lesson)}
+              disabled={saving}
+              className="cb-ghost-btn"
+            >
+              {saving ? "Saving…" : saved ? "Saved" : "Save for later"}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Reason pill */}
-      <p
-        className="font-dm-sans"
-        style={{
-          fontSize: "12px",
-          fontWeight: 400,
-          color: "var(--text-dimmer)",
-          marginBottom: "10px",
-          fontStyle: "italic",
-        }}
-      >
-        {recommendation.reason}
-      </p>
-
-      {/* Title */}
-      <h3
-        className="font-syne"
-        style={{
-          fontSize: "26px",
-          fontWeight: 700,
-          letterSpacing: "-0.01em",
-          lineHeight: 1.2,
-          color: "var(--text-primary)",
-          marginBottom: "10px",
-        }}
-      >
-        {isLesson ? recommendation.lesson.title : action?.title}
-      </h3>
-
-      {/* Description */}
-      <p
-        className="font-dm-sans"
-        style={{
-          fontSize: "14px",
-          fontWeight: 300,
-          color: "var(--text-muted)",
-          lineHeight: 1.65,
-          maxWidth: "600px",
-          marginBottom: "28px",
-        }}
-      >
-        {isLesson ? recommendation.lesson.description : action?.description}
-      </p>
-
-      {/* Actions */}
+      {/* Right: meta pills */}
       <div
         style={{
           display: "flex",
-          gap: "12px",
-          alignItems: "center",
-          flexWrap: "wrap",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: "6px",
+          paddingTop: "4px",
+          flexShrink: 0,
         }}
       >
-        <Link href={href} className="db-primary-btn font-dm-sans">
-          {isLesson ? "Start lesson" : action?.cta}
-        </Link>
-
-        {isLesson && (
-          <button
-            type="button"
-            data-saved={saved}
-            onClick={() => handleSave(recommendation.lesson)}
-            disabled={saving}
-            className="db-ghost-btn font-dm-sans"
+        {metaPills.map((pill) => (
+          <div
+            key={pill}
+            style={{
+              background: "var(--s2)",
+              border: "0.5px solid var(--b2)",
+              borderRadius: "6px",
+              padding: "4px 10px",
+              ...mono,
+              fontSize: "10px",
+              fontWeight: 400,
+              color: "var(--t2)",
+              whiteSpace: "nowrap",
+            }}
           >
-            {saving ? "Saving…" : saved ? "Saved" : "Save for later"}
-          </button>
-        )}
-
-        <Link
-          href={dontKnowHref}
-          className="font-dm-sans"
+            {pill}
+          </div>
+        ))}
+        <p
           style={{
-            fontSize: "12px",
+            ...mono,
+            fontSize: "10px",
             fontWeight: 400,
-            color: "var(--text-dimmer)",
-            textDecoration: "none",
-            marginLeft: "auto",
+            color: "var(--t3)",
+            marginTop: "8px",
             whiteSpace: "nowrap",
           }}
         >
-          Don&apos;t know where to start?
-        </Link>
+          <Link
+            href={dontKnowHref}
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
+            Don&apos;t know where to start?
+          </Link>
+        </p>
       </div>
     </div>
   );

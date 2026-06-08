@@ -1,16 +1,10 @@
 import { cfopLessons } from "./cfop";
 import { compPrepLessons } from "./comp-prep";
-import { rouxLessons } from "./roux";
 import type { Lesson } from "./types";
 
-const allLessons: Lesson[] = [
-  ...cfopLessons,
-  ...rouxLessons,
-  ...compPrepLessons,
-];
+const allLessons: Lesson[] = [...cfopLessons, ...compPrepLessons];
 
 export function getRecommendedLesson(
-  method: string | null,
   completedLessons: string[],
   analysisLessonIds?: string[] | null,
 ): Lesson | null {
@@ -22,6 +16,5 @@ export function getRecommendedLesson(
       }
     }
   }
-  const trackLessons = method === "roux" ? rouxLessons : cfopLessons;
-  return trackLessons.find((l) => !completedLessons.includes(l.id)) ?? null;
+  return cfopLessons.find((l) => !completedLessons.includes(l.id)) ?? null;
 }

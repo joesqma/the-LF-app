@@ -39,8 +39,7 @@ Return this exact structure:
   "recommended_lesson_ids": ["lesson-id-1", "lesson-id-2"]
 }
 
-For CFOP, phases are: Cross, F2L Pair 1, F2L Pair 2, F2L Pair 3, F2L Pair 4, OLL, PLL.
-For Roux, phases are: First Block, Second Square, Last Pair, CMLL, LSE.
+For CFOP, phases are: Cross, F2L, OLL, PLL.
 For Beginner, phases are: White Cross, White Corners, Middle Layer Edges, Yellow Cross, Yellow Corners.
 
 Focus on: algorithm identification, execution hesitations, phase timing, look-ahead quality.
@@ -84,12 +83,11 @@ async function runAnalysis(
       scrambleNote,
     );
 
-    let videoPart: Part & { videoMetadata?: { fps: number } };
+    let videoPart: Part;
 
     if (buffer.length <= INLINE_LIMIT) {
       videoPart = {
         inlineData: { mimeType, data: buffer.toString("base64") },
-        videoMetadata: { fps: 4 },
       };
     } else {
       const ext = videoPath.split(".").at(-1) ?? "mp4";
@@ -115,7 +113,6 @@ async function runAnalysis(
 
         videoPart = {
           fileData: { mimeType: geminiFile.mimeType, fileUri: geminiFile.uri },
-          videoMetadata: { fps: 4 },
         };
       } finally {
         await unlink(tmpPath).catch(() => {});

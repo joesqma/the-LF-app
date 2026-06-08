@@ -1,6 +1,6 @@
 export type Lesson = {
   id: string;
-  track: "cfop" | "roux" | "comp-prep" | "getting-faster";
+  track: "cfop" | "comp-prep" | "getting-faster";
   phase: string;
   order: number;
   title: string;

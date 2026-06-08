@@ -1,12 +1,11 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
 import {
   BarChart2,
   Bookmark,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  Home,
+  LayoutDashboard,
   Settings,
   Timer,
   User,
@@ -16,98 +15,253 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { cn } from "~/lib/utils";
+import { useEffect, useState } from "react";
+import { useSidebar } from "~/lib/sidebar-context";
+import { createClient } from "~/lib/supabase/client";
 
-const navLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/learn", label: "Learn", icon: BookOpen },
-  { href: "/training", label: "Training", icon: Zap },
-  { href: "/timer", label: "Timer", icon: Timer },
-  { href: "/analysis", label: "Analysis", icon: Video },
-  { href: "/library", label: "Library", icon: Bookmark },
-  { href: "/stats", label: "Stats", icon: BarChart2 },
-  { href: "/profile", label: "Profile", icon: User },
-  { href: "/settings", label: "Settings", icon: Settings },
+const NAV_GROUPS: Array<{
+  label: string | null;
+  items: Array<{ href: string; label: string; Icon: LucideIcon }>;
+}> = [
+  {
+    label: null,
+    items: [{ href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard }],
+  },
+  {
+    label: "TRAIN",
+    items: [
+      { href: "/timer", label: "Timer", Icon: Timer },
+      { href: "/training", label: "Training", Icon: Zap },
+      { href: "/analysis", label: "Analysis", Icon: Video },
+    ],
+  },
+  {
+    label: "LEARN",
+    items: [
+      { href: "/learn", label: "Learn", Icon: BookOpen },
+      { href: "/library", label: "Library", Icon: Bookmark },
+    ],
+  },
+  {
+    label: "ACCOUNT",
+    items: [
+      { href: "/stats", label: "Stats", Icon: BarChart2 },
+      { href: "/profile", label: "Profile", Icon: User },
+      { href: "/settings", label: "Settings", Icon: Settings },
+    ],
+  },
 ];
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return (parts[0]?.[0] ?? "?").toUpperCase();
+  return (
+    (parts[0]?.[0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")
+  ).toUpperCase();
+}
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const { hidden } = useSidebar();
+  const [profile, setProfile] = useState<{
+    name: string;
+    email: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .single();
+      setProfile({
+        name: data?.display_name ?? user.email?.split("@")[0] ?? "User",
+        email: user.email ?? "",
+      });
+    });
+  }, []);
 
   return (
     <aside
-      className={cn(
-        "flex h-screen shrink-0 flex-col border-r border-border bg-background transition-all duration-200",
-        collapsed ? "w-10" : "w-64",
-      )}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "220px",
+        height: "100vh",
+        background: "var(--s1)",
+        borderRight: "0.5px solid var(--b1)",
+        zIndex: 100,
+        display: hidden ? "none" : "flex",
+        flexDirection: "column",
+      }}
     >
-      {collapsed ? (
-        /* Collapsed: only the expand button */
-        <div className="flex justify-center pt-4">
-          <button
-            type="button"
-            onClick={() => setCollapsed(false)}
-            aria-label="Expand sidebar"
-            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        /* Expanded: full sidebar */
-        <>
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-2.5">
-              <Image
-                src="/icon.png"
-                alt="Cubewise"
-                width={36}
-                height={36}
-                className="h-9 w-9 shrink-0 object-contain"
-              />
-              <span className="text-xl font-semibold tracking-tight text-foreground">
-                Cubewise
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setCollapsed(true)}
-              aria-label="Collapse sidebar"
-              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          </div>
+      {/* Logo */}
+      <div
+        style={{
+          padding: "20px 16px 12px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          flexShrink: 0,
+        }}
+      >
+        <Image
+          src="/icon.png"
+          alt="Cubewise"
+          width={32}
+          height={32}
+          style={{ objectFit: "contain" }}
+        />
+        <span
+          style={{
+            fontFamily: "var(--font-dm-sans), 'DM Sans', sans-serif",
+            fontSize: "14px",
+            fontWeight: 600,
+            color: "var(--t1)",
+            letterSpacing: "0.1px",
+          }}
+        >
+          Cubewise
+        </span>
+      </div>
 
-          {/* Nav */}
-          <nav className="flex-1 overflow-y-auto px-2 py-1">
-            <ul className="flex flex-col gap-0.5">
-              {navLinks.map(({ href, label, icon: Icon }) => {
-                const active =
-                  pathname === href || pathname.startsWith(`${href}/`);
-                return (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-base transition-colors",
-                        active
-                          ? "bg-accent font-medium text-foreground"
-                          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
-                      )}
-                    >
-                      <Icon className="h-6 w-6 shrink-0" />
-                      {label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </>
-      )}
+      {/* Nav */}
+      <nav style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label ?? "main"}>
+            {group.label && (
+              <div
+                style={{
+                  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  color: "var(--t3)",
+                  padding: "12px 16px 4px",
+                }}
+              >
+                {group.label}
+              </div>
+            )}
+            {group.items.map(({ href, label, Icon }) => {
+              const active =
+                pathname === href ||
+                (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={active ? undefined : "cb-nav-item"}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    position: "relative",
+                    padding: "8px 14px",
+                    textDecoration: "none",
+                    fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+                    fontSize: "14px",
+                    fontWeight: active ? 500 : 400,
+                    ...(active
+                      ? { color: "var(--blue)", background: "var(--blue-dim)" }
+                      : {}),
+                    transition: "color 150ms, background-color 150ms",
+                  }}
+                >
+                  {active && (
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: "2px",
+                        background: "var(--blue)",
+                      }}
+                    />
+                  )}
+                  <Icon size={15} strokeWidth={1.6} aria-hidden="true" />
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
+      </nav>
+
+      {/* Profile cell */}
+      <div
+        style={{
+          margin: "8px 12px 12px",
+          padding: "10px",
+          background: "var(--s2)",
+          border: "0.5px solid var(--b1)",
+          borderRadius: "10px",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            width: "30px",
+            height: "30px",
+            borderRadius: "8px",
+            background: "var(--blue-dim)",
+            border: "0.5px solid var(--b3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "var(--blue)",
+            }}
+          >
+            {profile ? getInitials(profile.name) : "?"}
+          </span>
+        </div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+              fontSize: "12px",
+              fontWeight: 600,
+              color: "var(--t1)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {profile?.name ?? "—"}
+          </div>
+          <div
+            style={{
+              fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+              fontSize: "10px",
+              fontWeight: 400,
+              color: "var(--t3)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {profile?.email ?? ""}
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

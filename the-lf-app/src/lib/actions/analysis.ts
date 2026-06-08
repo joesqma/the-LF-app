@@ -5,7 +5,7 @@ import { createClient } from "~/lib/supabase/server";
 export async function createAnalysis(
   userId: string,
   videoPath: string,
-  method: "cfop" | "roux" | "beginner",
+  method: "cfop" | "beginner",
   scramble?: string,
 ): Promise<{ error: string } | { id: string }> {
   const supabase = await createClient();

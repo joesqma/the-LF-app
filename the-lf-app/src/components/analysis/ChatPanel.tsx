@@ -15,6 +15,13 @@ interface Props {
   userTier: "free" | "premium" | "lifetime";
 }
 
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
+
 export function ChatPanel({ analysisId, initialMessages }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -93,14 +100,16 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
           setExpanded(true);
           setTimeout(() => inputRef.current?.focus(), 50);
         }}
-        className="anl-coach-btn font-dm-sans"
+        className="anl-coach-btn"
       >
+        {/* Chat bubble icon */}
         <svg
           width="14"
           height="14"
           viewBox="0 0 14 14"
           fill="none"
           aria-hidden="true"
+          style={{ color: "var(--purple)", flexShrink: 0 }}
         >
           <path
             d="M1 1h12v9H8l-1.5 2L5 10H1V1z"
@@ -109,7 +118,7 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
             strokeLinejoin="round"
           />
         </svg>
-        Chat with your coach
+        Chat with your AI coach
       </button>
     );
   }
@@ -117,9 +126,9 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
   return (
     <div
       style={{
-        border: "1px solid var(--border)",
+        border: "0.5px solid var(--b2)",
         borderRadius: "14px",
-        background: "var(--bg-card)",
+        background: "var(--s1)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
@@ -132,32 +141,34 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "14px 18px",
-          borderBottom: "1px solid var(--border)",
+          padding: "12px 16px",
+          borderBottom: "0.5px solid var(--b1)",
           flexShrink: 0,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <svg
-            width="14"
-            height="14"
+            width="13"
+            height="13"
             viewBox="0 0 14 14"
             fill="none"
             aria-hidden="true"
           >
             <path
               d="M7 1v2M7 11v2M1 7h2M11 7h2M3.05 3.05l1.42 1.42M9.53 9.53l1.42 1.42M3.05 10.95l1.42-1.42M9.53 4.47l1.42-1.42"
-              stroke="var(--accent-purple)"
+              stroke="var(--purple)"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
           </svg>
           <span
-            className="font-syne"
             style={{
-              fontSize: "14px",
+              ...mono,
+              fontSize: "10px",
               fontWeight: 600,
-              color: "var(--text-primary)",
+              textTransform: "uppercase",
+              letterSpacing: "2px",
+              color: "var(--t2)",
             }}
           >
             AI Coach
@@ -168,14 +179,6 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
           onClick={() => setExpanded(false)}
           className="anl-chat-close"
           aria-label="Close chat"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "18px",
-            lineHeight: 1,
-            padding: "2px 4px",
-          }}
         >
           ×
         </button>
@@ -187,10 +190,10 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "16px 18px",
+          padding: "16px",
           display: "flex",
           flexDirection: "column",
-          gap: "12px",
+          gap: "10px",
         }}
       >
         {messages.length === 0 && !loading && errorKind === null ? (
@@ -204,10 +207,10 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
             }}
           >
             <p
-              className="font-dm-sans"
               style={{
+                ...sans,
                 fontSize: "13px",
-                color: "var(--text-dimmer)",
+                color: "var(--t3)",
                 textAlign: "center",
               }}
             >
@@ -218,30 +221,31 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
           messages.map((msg) => (
             <div
               key={msg.id}
-              className="font-dm-sans"
               style={
                 msg.role === "user"
                   ? {
                       alignSelf: "flex-end",
-                      background: "#0d1a2e",
-                      border: "1px solid #1d3557",
+                      background: "var(--blue-dim)",
+                      border: "0.5px solid var(--b2)",
                       borderRadius: "12px 12px 3px 12px",
                       padding: "10px 14px",
                       maxWidth: "75%",
+                      ...sans,
                       fontSize: "13px",
-                      color: "var(--text-secondary)",
+                      color: "var(--t1)",
                       lineHeight: 1.55,
                       whiteSpace: "pre-wrap",
                     }
                   : {
                       alignSelf: "flex-start",
-                      background: "#111",
-                      border: "1px solid var(--border)",
+                      background: "var(--s2)",
+                      border: "0.5px solid var(--b1)",
                       borderRadius: "12px 12px 12px 3px",
                       padding: "10px 14px",
                       maxWidth: "85%",
+                      ...sans,
                       fontSize: "13px",
-                      color: "var(--text-secondary)",
+                      color: "var(--t2)",
                       lineHeight: 1.65,
                       whiteSpace: "pre-wrap",
                     }
@@ -256,10 +260,10 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
           <div
             style={{
               alignSelf: "flex-start",
-              background: "#111",
-              border: "1px solid var(--border)",
+              background: "var(--s2)",
+              border: "0.5px solid var(--b1)",
               borderRadius: "12px 12px 12px 3px",
-              padding: "12px 16px",
+              padding: "12px 14px",
               display: "flex",
               gap: "5px",
               alignItems: "center",
@@ -283,10 +287,10 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
               />
             )}
             <p
-              className="font-dm-sans"
               style={{
+                ...sans,
                 fontSize: "12px",
-                color: "var(--text-dimmer)",
+                color: "var(--t3)",
                 marginBottom: "10px",
               }}
             >
@@ -295,16 +299,7 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
             <button
               type="button"
               onClick={() => setShowUpsell(true)}
-              className="font-dm-sans"
-              style={{
-                background: "#0d1a2e",
-                border: "1px solid #1d3557",
-                color: "var(--accent-blue)",
-                borderRadius: "7px",
-                padding: "6px 14px",
-                fontSize: "12px",
-                cursor: "pointer",
-              }}
+              className="cb-primary-btn"
             >
               Upgrade →
             </button>
@@ -313,10 +308,7 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
 
         {errorKind === "unavailable" && (
           <div style={{ textAlign: "center", padding: "16px" }}>
-            <p
-              className="font-dm-sans"
-              style={{ fontSize: "12px", color: "#ef4444" }}
-            >
+            <p style={{ ...sans, fontSize: "12px", color: "var(--red)" }}>
               Coach is unavailable right now — try again in a moment.
             </p>
           </div>
@@ -328,8 +320,8 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
       {/* Input row */}
       <div
         style={{
-          padding: "12px 18px",
-          borderTop: "1px solid var(--border)",
+          padding: "10px 12px",
+          borderTop: "0.5px solid var(--b1)",
           display: "flex",
           gap: "8px",
           alignItems: "center",
@@ -342,9 +334,9 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about your solve..."
+          placeholder="Ask about your solve…"
           disabled={loading || errorKind === "limit"}
-          className="anl-chat-input font-dm-sans"
+          className="anl-chat-input"
         />
         <button
           type="button"
@@ -354,8 +346,8 @@ export function ChatPanel({ analysisId, initialMessages }: Props) {
           aria-label="Send message"
         >
           <svg
-            width="14"
-            height="14"
+            width="13"
+            height="13"
             viewBox="0 0 14 14"
             fill="none"
             aria-hidden="true"

@@ -37,6 +37,30 @@ function computeAo(solves: SolveStat[], n: number): string {
   return fmtMs(avg);
 }
 
+const CELLS = [
+  { key: "ao5", label: "AO5", sub: "last 5 solves", accent: "var(--blue)" },
+  { key: "ao12", label: "AO12", sub: "last 12 solves", accent: "var(--teal)" },
+  {
+    key: "total",
+    label: "Total solves",
+    sub: "all time",
+    accent: "var(--purple)",
+  },
+  {
+    key: "days",
+    label: "Days active",
+    sub: "past year",
+    accent: "var(--orange)",
+  },
+] as const;
+
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
+
 export function QuickStatsBlock({
   recentSolves,
   totalSolves,
@@ -47,73 +71,101 @@ export function QuickStatsBlock({
   const ao5 = computeAo(recentSolves, 5);
   const ao12 = computeAo(recentSolves, 12);
 
-  const stats = [
-    { label: "Ao5", value: ao5 },
-    { label: "Ao12", value: ao12 },
-    { label: "Total solves", value: totalSolves.toLocaleString() },
-    { label: "Days active", value: daysActive.toLocaleString() },
-  ];
+  const values: Record<string, string> = {
+    ao5,
+    ao12,
+    total: totalSolves.toLocaleString(),
+    days: daysActive.toLocaleString(),
+  };
 
   return (
-    <div style={{ marginTop: "40px", marginBottom: "40px" }}>
+    <div>
       <p
-        className="font-dm-sans"
         style={{
-          fontSize: "11px",
-          fontWeight: 500,
+          ...mono,
+          fontSize: "10px",
+          fontWeight: 600,
           textTransform: "uppercase",
-          letterSpacing: "0.1em",
-          color: "var(--text-dimmer)",
-          marginBottom: "16px",
+          letterSpacing: "2px",
+          color: "var(--t3)",
+          marginBottom: "12px",
         }}
       >
         Quick stats
       </p>
+
       <div
         style={{
-          display: "flex",
-          gap: "1px",
-          background: "var(--border)",
-          border: "1px solid var(--border)",
-          borderRadius: "12px",
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          background: "var(--s1)",
+          border: "0.5px solid var(--b2)",
+          borderRadius: "14px",
           overflow: "hidden",
         }}
       >
-        {stats.map(({ label, value }) => (
+        {CELLS.map(({ key, label, sub, accent }, i) => (
           <div
-            key={label}
+            key={key}
             style={{
-              flex: 1,
-              background: "var(--bg-card)",
-              padding: "16px 18px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "4px",
+              position: "relative",
+              padding: "20px 22px",
+              borderRight:
+                i < CELLS.length - 1 ? "0.5px solid var(--b1)" : undefined,
             }}
           >
-            <span
-              className="font-mono tabular-nums"
+            {/* Accent top bar */}
+            <div
+              aria-hidden="true"
               style={{
-                fontSize: "20px",
-                fontWeight: 600,
-                color: "var(--text-primary)",
-                lineHeight: 1,
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "2px",
+                background: accent,
               }}
-            >
-              {value}
-            </span>
-            <span
-              className="font-dm-sans"
+            />
+
+            <div
               style={{
-                fontSize: "11px",
-                fontWeight: 300,
-                color: "var(--text-dimmer)",
+                ...mono,
+                fontSize: "10px",
+                fontWeight: 600,
                 textTransform: "uppercase",
-                letterSpacing: "0.06em",
+                letterSpacing: "1.5px",
+                color: "var(--t3)",
+                marginBottom: "10px",
+                marginTop: "2px",
               }}
             >
               {label}
-            </span>
+            </div>
+
+            <div
+              style={{
+                ...mono,
+                fontSize: "30px",
+                fontWeight: 700,
+                letterSpacing: "-1px",
+                lineHeight: 1,
+                color: accent,
+              }}
+            >
+              {values[key]}
+            </div>
+
+            <div
+              style={{
+                ...sans,
+                fontSize: "11px",
+                fontWeight: 400,
+                color: "var(--t3)",
+                marginTop: "5px",
+              }}
+            >
+              {sub}
+            </div>
           </div>
         ))}
       </div>

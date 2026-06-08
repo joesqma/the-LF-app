@@ -1,38 +1,63 @@
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
+
 export default function TrainingPage() {
   return (
     <div
-      className="py-6 px-5 md:py-[48px] md:px-[56px]"
       style={{
-        background: "var(--bg-base)",
-        flex: 1,
-        overflowY: "auto",
-        minWidth: 0,
+        padding: "32px 36px 60px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "70vh",
+        textAlign: "center",
       }}
     >
       <p
-        className="font-dm-sans"
         style={{
-          fontSize: "13px",
-          fontWeight: 400,
-          color: "var(--text-dimmer)",
-          letterSpacing: "0.08em",
+          ...mono,
+          fontSize: "10px",
+          fontWeight: 600,
+          letterSpacing: "2px",
           textTransform: "uppercase",
-          marginBottom: "10px",
+          color: "var(--blue)",
+          marginBottom: "20px",
         }}
       >
         Training
       </p>
+
       <h1
-        className="font-syne text-[28px] md:text-[38px]"
         style={{
+          ...sans,
+          fontSize: "clamp(56px, 10vw, 96px)",
           fontWeight: 800,
-          color: "var(--text-primary)",
-          letterSpacing: "-0.02em",
-          lineHeight: 1.1,
+          letterSpacing: "-3px",
+          lineHeight: 1,
+          color: "var(--t1)",
+          marginBottom: "24px",
         }}
       >
-        Training
+        Coming Soon!
       </h1>
+
+      <p
+        style={{
+          ...sans,
+          fontSize: "15px",
+          color: "var(--t3)",
+          lineHeight: 1.6,
+          maxWidth: "380px",
+        }}
+      >
+        Structured training plans, drill sessions, and progress tracking are on
+        the way. Check back soon.
+      </p>
     </div>
   );
 }

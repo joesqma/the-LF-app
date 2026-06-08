@@ -1,10 +1,18 @@
 import { redirect } from "next/navigation";
-import { DontKnowCTA } from "~/components/dashboard/DontKnowCTA";
 import { QuickNavGrid } from "~/components/dashboard/QuickNavGrid";
 import { QuickStatsBlock } from "~/components/dashboard/QuickStatsBlock";
+import { RecentAnalysis } from "~/components/dashboard/RecentAnalysis";
 import { RecommendedLessonCard } from "~/components/dashboard/RecommendedLessonCard";
 import { getRecommendedLesson } from "~/lib/recommendations";
 import { createClient } from "~/lib/supabase/server";
+import type { AnalysisReport } from "~/types/analysis";
+
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -23,6 +31,7 @@ export default async function DashboardPage() {
     totalSolvesResult,
     datesResult,
     analysisCountResult,
+    recentAnalysesResult,
   ] = await Promise.all([
     supabase
       .from("user_profiles")
@@ -56,6 +65,13 @@ export default async function DashboardPage() {
       .from("analyses")
       .select("*", { count: "exact", head: true })
       .eq("user_id", user.id),
+    supabase
+      .from("analyses")
+      .select("id, method, created_at, report")
+      .eq("user_id", user.id)
+      .eq("status", "complete")
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
 
   const profile = profileResult.data;
@@ -70,11 +86,13 @@ export default async function DashboardPage() {
   ).size;
   const analysisCount = analysisCountResult.count ?? 0;
 
-  const completedLessons =
-    (profile?.completed_lessons as string[] | null) ?? [];
-  const showDontKnowCTA = completedLessons.length === 0 && analysisCount === 0;
+  const recentAnalyses = (recentAnalysesResult.data ?? []).map((a) => ({
+    id: a.id,
+    method: a.method,
+    created_at: a.created_at,
+    report: (a.report as unknown as AnalysisReport | null) ?? null,
+  }));
 
-  // "Don't know where to start?" destination — uses onboarding answers
   const dontKnowHref =
     profile?.knows_how_to_solve === false
       ? "/learn/cfop/cfop-cross-1"
@@ -95,65 +113,67 @@ export default async function DashboardPage() {
     : null;
 
   return (
-    <div
-      className="py-6 px-5 md:py-[48px] md:px-[56px]"
-      style={{
-        background: "var(--bg-base)",
-        flex: 1,
-        overflowY: "auto",
-        minWidth: 0,
-      }}
-    >
-      {/* Greeting */}
-      <div style={{ marginBottom: "48px" }}>
+    <div style={{ padding: "28px 32px 48px" }}>
+      {/* Hero */}
+      <div style={{ marginBottom: "28px" }}>
         <p
-          className="font-dm-sans"
           style={{
-            fontSize: "13px",
-            fontWeight: 400,
-            color: "var(--text-dimmer)",
-            letterSpacing: "0.08em",
+            ...mono,
+            fontSize: "10px",
+            fontWeight: 600,
             textTransform: "uppercase",
-            marginBottom: "10px",
+            letterSpacing: "2px",
+            color: "var(--t3)",
+            marginBottom: "8px",
           }}
         >
-          Dashboard
+          Overview
         </p>
         <h1
-          className="font-syne text-[28px] md:text-[38px]"
           style={{
-            fontWeight: 800,
-            color: "var(--text-primary)",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.1,
+            ...sans,
+            fontSize: "38px",
+            fontWeight: 700,
+            letterSpacing: "-1.5px",
+            lineHeight: 1.05,
+            color: "var(--t1)",
           }}
         >
-          Welcome back, {firstName}.
+          Welcome back,{" "}
+          <span style={{ color: "var(--blue)" }}>{firstName}.</span>
         </h1>
       </div>
 
       {/* AI Recommendation */}
       {recommended && (
-        <RecommendedLessonCard
-          recommendation={recommended}
-          dontKnowHref={dontKnowHref}
-        />
+        <div style={{ marginBottom: "28px" }}>
+          <RecommendedLessonCard
+            recommendation={recommended}
+            dontKnowHref={dontKnowHref}
+          />
+        </div>
       )}
 
       {/* Quick navigation */}
-      <QuickNavGrid />
+      <div style={{ marginBottom: "28px" }}>
+        <QuickNavGrid />
+      </div>
 
-      {/* Don't know CTA */}
-      {showDontKnowCTA && (
-        <DontKnowCTA knowsHowToSolve={profile?.knows_how_to_solve ?? false} />
+      {/* Quick stats */}
+      {totalSolves > 0 && (
+        <div style={{ marginBottom: "28px" }}>
+          <QuickStatsBlock
+            recentSolves={recentSolves}
+            totalSolves={totalSolves}
+            daysActive={daysActive}
+          />
+        </div>
       )}
 
-      {/* Quick stats — bottom of page */}
-      <QuickStatsBlock
-        recentSolves={recentSolves}
-        totalSolves={totalSolves}
-        daysActive={daysActive}
-      />
+      {/* Recent analysis */}
+      {recentAnalyses.length > 0 && (
+        <RecentAnalysis analyses={recentAnalyses} />
+      )}
     </div>
   );
 }

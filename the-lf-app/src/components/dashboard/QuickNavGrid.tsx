@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-function ClockIcon() {
+function TimerIcon() {
   return (
     <svg
       width="16"
@@ -80,81 +80,100 @@ const NAV_ITEMS = [
     href: "/timer",
     title: "Open timer",
     subtitle: "Log a solve",
-    Icon: ClockIcon,
+    Icon: TimerIcon,
+    iconClass: "cb-icon-1",
   },
   {
     href: "/analysis",
     title: "New analysis",
     subtitle: "Upload a solve",
     Icon: VideoIcon,
+    iconClass: "cb-icon-2",
   },
   {
     href: "/learn",
     title: "Browse lessons",
     subtitle: "Continue learning",
     Icon: BookIcon,
+    iconClass: "cb-icon-3",
   },
   {
     href: "/library",
     title: "Library",
     subtitle: "Saved lessons",
     Icon: LibraryIcon,
+    iconClass: "cb-icon-4",
   },
 ] as const;
+
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
 
 export function QuickNavGrid() {
   return (
     <div>
       <p
-        className="font-dm-sans"
         style={{
-          fontSize: "11px",
-          fontWeight: 500,
+          ...mono,
+          fontSize: "10px",
+          fontWeight: 600,
           textTransform: "uppercase",
-          letterSpacing: "0.1em",
-          color: "var(--text-dimmer)",
-          marginBottom: "16px",
+          letterSpacing: "2px",
+          color: "var(--t3)",
+          marginBottom: "12px",
         }}
       >
         Quick navigation
       </p>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {NAV_ITEMS.map(({ href, title, subtitle, Icon }) => (
-          <Link key={href} href={href} className="db-nav-card">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: "10px",
+        }}
+      >
+        {NAV_ITEMS.map(({ href, title, subtitle, Icon, iconClass }) => (
+          <Link key={href} href={href} className="cb-nav-card">
             <div
               style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "8px",
-                border: "1px solid var(--border-card)",
+                width: "34px",
+                height: "34px",
+                background: "var(--s2)",
+                border: "0.5px solid var(--b2)",
+                borderRadius: "9px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                color: "var(--t3)",
+                transition: "color 150ms",
               }}
+              className={iconClass}
             >
-              <span className="db-nav-icon">
-                <Icon />
-              </span>
+              <Icon />
             </div>
 
             <div>
               <p
-                className="font-syne"
                 style={{
-                  fontSize: "15px",
+                  ...sans,
+                  fontSize: "13px",
                   fontWeight: 600,
-                  color: "var(--text-secondary)",
+                  color: "var(--t1)",
                 }}
               >
                 {title}
               </p>
               <p
-                className="font-dm-sans"
                 style={{
-                  fontSize: "12px",
-                  fontWeight: 300,
-                  color: "var(--text-dimmer)",
+                  ...sans,
+                  fontSize: "11px",
+                  fontWeight: 400,
+                  color: "var(--t3)",
                   marginTop: "2px",
                 }}
               >

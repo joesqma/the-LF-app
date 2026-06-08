@@ -5,7 +5,7 @@ import { useState } from "react";
 import { cn } from "~/lib/utils";
 
 type State = "idle" | "uploading" | "processing" | "complete";
-type Method = "cfop" | "roux";
+type Method = "cfop";
 
 const PHASES = [
   {
@@ -17,20 +17,12 @@ const PHASES = [
     rec: "Nothing to fix here.",
   },
   {
-    id: "f2l1",
-    name: "F2L Pair 1",
-    t: "0:02–0:05",
-    alg: "F R U R\u2019 U\u2019 F\u2019",
-    obs: "Solid execution but a 0.4s pause between cross\u2192F2L1.",
-    rec: "Practice locating the next F2L pair during cross execution.",
-  },
-  {
-    id: "f2l2",
-    name: "F2L Pair 2",
-    t: "0:05–0:08",
-    alg: "U R U\u2019 R\u2019",
-    obs: "0.7s pause looking for the next pair \u2014 the longest in the solve.",
-    rec: "F2L lookahead drills (recommended below).",
+    id: "f2l",
+    name: "F2L",
+    t: "0:02–0:11",
+    alg: null as string | null,
+    obs: "Solid execution overall with a 0.7s pause during lookahead — the longest hesitation in the solve.",
+    rec: "Practice F2L lookahead drills to eliminate pauses between pairs.",
   },
   {
     id: "oll",
@@ -76,14 +68,12 @@ export function AnalysisClient() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {state === "uploading"
-              ? "Uploading\u2026"
-              : "Analysing your solve\u2026"}
+            {state === "uploading" ? "Uploading…" : "Analysing your solve…"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {state === "uploading"
               ? "Sending the video to secure storage."
-              : "Gemini is watching frame-by-frame. Usually takes 10\u201330 seconds."}
+              : "Gemini is watching frame-by-frame. Usually takes 10–30 seconds."}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -97,8 +87,8 @@ export function AnalysisClient() {
           </div>
           <p className="mt-3 font-mono text-xs text-muted-foreground">
             {state === "uploading"
-              ? `${progress}% \u00b7 solve.mp4 \u00b7 14.2 MB`
-              : "phase-detection \u00b7 gemini-1.5-pro"}
+              ? `${progress}% · solve.mp4 · 14.2 MB`
+              : "phase-detection · gemini-1.5-pro"}
           </p>
         </div>
       </div>
@@ -114,7 +104,7 @@ export function AnalysisClient() {
               Solve analysis
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              CFOP \u00b7 14.21s \u00b7 uploaded just now
+              CFOP · 14.21s · uploaded just now
             </p>
           </div>
           <button
@@ -136,12 +126,12 @@ export function AnalysisClient() {
           </h3>
           <p className="text-sm text-muted-foreground">
             Your algorithms are clean and recognition is fast. Almost a full
-            second is being lost between F2L pairs \u2014 that\u2019s the
-            highest-impact area to drill.
+            second is being lost during F2L — that’s the highest-impact area to
+            drill.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground">
-              Top priority \u00b7 F2L lookahead
+              Top priority · F2L lookahead
             </span>
             <span className="inline-flex items-center rounded-full border border-border px-2.5 py-0.5 text-xs font-medium text-foreground">
               Algorithm execution: clean
@@ -228,7 +218,7 @@ export function AnalysisClient() {
           Solving method
         </h3>
         <div className="flex gap-2">
-          {(["cfop", "roux"] as const).map((m) => (
+          {(["cfop"] as const).map((m) => (
             <button
               key={m}
               type="button"
@@ -252,7 +242,7 @@ export function AnalysisClient() {
           Drop a solve video here
         </div>
         <p className="text-xs text-muted-foreground">
-          mp4 \u00b7 mov \u00b7 webm \u00b7 max 2 minutes \u00b7 max 200 MB
+          mp4 · mov · webm · max 2 minutes · max 200 MB
         </p>
         <button
           type="button"

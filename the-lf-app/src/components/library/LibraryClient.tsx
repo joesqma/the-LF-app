@@ -384,7 +384,7 @@ export function LibraryClient({
                 alignItems: "center",
               }}
             >
-              {(["all", "cfop", "roux"] as const).map((f) => (
+              {(["all", "cfop"] as const).map((f) => (
                 <FilterPill
                   key={f}
                   active={aMethodF === f}
@@ -1026,7 +1026,8 @@ export function LibraryClient({
                   <span
                     style={{
                       flex: 1,
-                      fontFamily: "var(--font-mono)",
+                      fontFamily:
+                        "var(--font-geist-mono), 'Geist Mono', monospace",
                       fontSize: "12px",
                       color: "var(--text-muted)",
                       letterSpacing: "0.04em",

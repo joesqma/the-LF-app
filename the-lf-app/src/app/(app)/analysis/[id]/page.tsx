@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { AnalysisResultClient } from "~/components/analysis/AnalysisResultClient";
-import { PageShell } from "~/components/layout/PageShell";
 import { createClient } from "~/lib/supabase/server";
 
 export default async function AnalysisResultPage({
@@ -54,13 +53,13 @@ export default async function AnalysisResultPage({
     : { data: null };
 
   return (
-    <PageShell title="Solve Analysis">
+    <div style={{ background: "var(--bg)", padding: "28px 32px 48px" }}>
       <AnalysisResultClient
         analysis={analysis}
         videoUrl={signedData?.signedUrl ?? null}
         initialMessages={initialMessages}
         userTier={userTier}
       />
-    </PageShell>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Eye, Layers, Search, Timer } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AnalysisUploadClient } from "~/components/analysis/AnalysisUploadClient";
@@ -8,37 +9,79 @@ const FREE_MONTHLY_LIMIT = 3;
 
 const FEATURES = [
   {
-    emoji: "🔍",
+    Icon: Search,
     name: "Algorithm recognition",
     description:
       "Identifies which OLL, PLL, or CMLL case you executed and whether it matched the optimal algorithm.",
+    iconBg: "var(--blue-dim)",
+    iconColor: "var(--blue)",
   },
   {
-    emoji: "⏱️",
+    Icon: Timer,
     name: "Phase timing",
     description:
       "Breaks your solve into phases (Cross, F2L, OLL, PLL) and shows how long you spent in each.",
+    iconBg: "var(--green-dim)",
+    iconColor: "var(--green)",
   },
   {
-    emoji: "👁️",
+    Icon: Eye,
     name: "Look-ahead & hesitation",
     description:
       "Detects pauses between phases and identifies where you lose time to recognition lag.",
+    iconBg: "var(--red-dim)",
+    iconColor: "var(--red)",
   },
   {
-    emoji: "📋",
+    Icon: Layers,
     name: "Execution quality",
     description:
       "Assesses smoothness and flow during algorithm execution at a high level.",
+    iconBg: "var(--yellow-dim)",
+    iconColor: "var(--yellow)",
   },
-];
+] as const;
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
+const LIMIT_ROWS = [
+  { label: "Max video length", value: "2 min" },
+  { label: "Max file size", value: "200 MB" },
+  { label: "Formats", value: "MP4 · MOV · WebM" },
+] as const;
+
+function fmtDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString("en-GB", {
     day: "numeric",
+    month: "short",
   });
 }
+
+function fmtTime(raw: string | undefined): string {
+  if (!raw) return "—";
+  const trimmed = raw.trim();
+  let totalSec: number;
+  if (trimmed.includes(":")) {
+    const colonIdx = trimmed.indexOf(":");
+    const m = Number.parseInt(trimmed.slice(0, colonIdx), 10);
+    const s = Number.parseFloat(trimmed.slice(colonIdx + 1));
+    totalSec = m * 60 + s;
+  } else {
+    totalSec = Number.parseFloat(trimmed);
+  }
+  if (Number.isNaN(totalSec)) return trimmed;
+  if (totalSec >= 60) {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s.toFixed(2).padStart(5, "0")}`;
+  }
+  return totalSec.toFixed(2);
+}
+
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
 
 export default async function AnalysisPage() {
   const supabase = await createClient();
@@ -71,109 +114,74 @@ export default async function AnalysisPage() {
   ]);
 
   const profileMethod = profileResult.data?.method;
-  const method: "cfop" | "roux" | "beginner" =
-    profileMethod === "roux"
-      ? "roux"
-      : profileMethod === "beginner"
-        ? "beginner"
-        : "cfop";
+  const method: "cfop" | "beginner" =
+    profileMethod === "beginner" ? "beginner" : "cfop";
   const recentAnalyses = recentResult.data ?? [];
   const usedThisMonth = usageResult.count ?? 0;
-  const approachingLimit =
-    usedThisMonth >= Math.ceil(FREE_MONTHLY_LIMIT * (2 / 3));
+  const remaining = Math.max(0, FREE_MONTHLY_LIMIT - usedThisMonth);
+  const quotaPct = Math.min(
+    100,
+    Math.round((usedThisMonth / FREE_MONTHLY_LIMIT) * 100),
+  );
 
   return (
     <div
-      className="anl-page-scroll"
       style={{
-        background: "var(--bg-base)",
-        flex: 1,
-        overflowY: "auto",
-        minWidth: 0,
-        padding: "48px 56px 80px",
+        display: "grid",
+        gridTemplateColumns: "1fr 260px",
+        minHeight: "100%",
       }}
     >
-      {/* Page header */}
-      <div style={{ marginBottom: "40px" }}>
-        <p
-          className="font-dm-sans"
-          style={{
-            fontSize: "11px",
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            color: "var(--text-dimmer)",
-            marginBottom: "10px",
-          }}
-        >
-          Analysis
-        </p>
-        <h1
-          className="font-syne"
-          style={{
-            fontSize: "28px",
-            fontWeight: 800,
-            letterSpacing: "-0.02em",
-            color: "var(--text-primary)",
-            lineHeight: 1.1,
-          }}
-        >
-          AI Solve Analysis
-        </h1>
+      {/* Main column */}
+      <div
+        style={{
+          padding: "32px 36px 60px",
+          borderRight: "0.5px solid var(--b1)",
+        }}
+      >
+        <AnalysisUploadClient
+          userId={user.id}
+          initialMethod={method}
+          usedThisMonth={usedThisMonth}
+          usageLimit={FREE_MONTHLY_LIMIT}
+        />
       </div>
 
-      {/* Two-column layout */}
-      <div style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
-        {/* Left column */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <AnalysisUploadClient
-            userId={user.id}
-            initialMethod={method}
-            usedThisMonth={usedThisMonth}
-            usageLimit={FREE_MONTHLY_LIMIT}
-          />
-        </div>
-
-        {/* Right column */}
-        <div
-          style={{
-            width: "300px",
-            flexShrink: 0,
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-          }}
-        >
-          {/* Card 1: What Gets Analysed */}
-          <div
+      {/* Aside */}
+      <aside
+        style={{
+          padding: "32px 24px 60px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "28px",
+        }}
+      >
+        {/* What gets analysed */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <p
             style={{
-              border: "1px solid var(--border)",
-              borderRadius: "14px",
-              background: "var(--bg-card)",
-              padding: "20px 22px",
+              ...mono,
+              fontSize: "9px",
+              fontWeight: 700,
+              letterSpacing: "2.5px",
+              textTransform: "uppercase",
+              color: "var(--t3)",
             }}
           >
-            <p
-              className="font-dm-sans"
-              style={{
-                fontSize: "11px",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--text-dimmer)",
-                fontWeight: 500,
-                marginBottom: "14px",
-              }}
-            >
-              What gets analysed
-            </p>
-            {FEATURES.map((feature, i) => (
+            What gets analysed
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {FEATURES.map(({ Icon, name, description, iconBg, iconColor }) => (
               <div
-                key={feature.name}
+                key={name}
                 style={{
                   display: "flex",
+                  gap: "11px",
+                  padding: "11px 14px",
+                  background: "var(--s1)",
+                  border: "0.5px solid var(--b2)",
+                  borderRadius: "10px",
                   alignItems: "flex-start",
-                  gap: "12px",
-                  marginBottom: i < FEATURES.length - 1 ? "14px" : 0,
                 }}
               >
                 <div
@@ -181,118 +189,93 @@ export default async function AnalysisPage() {
                     width: "28px",
                     height: "28px",
                     borderRadius: "7px",
-                    border: "1px solid var(--border)",
-                    background: "#111",
+                    background: iconBg,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     flexShrink: 0,
-                    marginTop: "1px",
-                    fontSize: "13px",
                   }}
                 >
-                  {feature.emoji}
+                  <Icon
+                    size={14}
+                    strokeWidth={1.6}
+                    aria-hidden="true"
+                    style={{ color: iconColor }}
+                  />
                 </div>
-                <div style={{ minWidth: 0 }}>
+                <div>
                   <p
-                    className="font-dm-sans"
                     style={{
-                      fontSize: "13px",
-                      fontWeight: 500,
-                      color: "var(--text-secondary)",
+                      ...sans,
+                      fontSize: "12.5px",
+                      fontWeight: 600,
+                      color: "var(--t1)",
                       marginBottom: "2px",
                     }}
                   >
-                    {feature.name}
+                    {name}
                   </p>
                   <p
-                    className="font-dm-sans"
                     style={{
-                      fontSize: "11px",
-                      fontWeight: 300,
-                      color: "var(--text-dimmer)",
+                      ...sans,
+                      fontSize: "11.5px",
+                      color: "var(--t3)",
                       lineHeight: 1.5,
                     }}
                   >
-                    {feature.description}
+                    {description}
                   </p>
                 </div>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Card 2: Upload Limits */}
-          <div
+        {/* Limits */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <p
             style={{
-              border: "1px solid var(--border)",
-              borderRadius: "14px",
-              background: "var(--bg-card)",
-              padding: "20px 22px",
+              ...mono,
+              fontSize: "9px",
+              fontWeight: 700,
+              letterSpacing: "2.5px",
+              textTransform: "uppercase",
+              color: "var(--t3)",
             }}
           >
-            <p
-              className="font-dm-sans"
-              style={{
-                fontSize: "11px",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--text-dimmer)",
-                fontWeight: 500,
-                marginBottom: "14px",
-              }}
-            >
-              Upload limits
-            </p>
-            {(
-              [
-                {
-                  label: "Max video length",
-                  value: "2 minutes",
-                  highlight: false,
-                },
-                { label: "Max file size", value: "200 MB", highlight: false },
-                {
-                  label: "Accepted formats",
-                  value: "MP4, MOV, WebM",
-                  highlight: false,
-                },
-                {
-                  label: "Analyses this month",
-                  value: `${usedThisMonth} / ${FREE_MONTHLY_LIMIT} free`,
-                  highlight: approachingLimit,
-                },
-              ] as const
-            ).map((row, i, arr) => (
+            Limits
+          </p>
+          <div
+            style={{
+              background: "var(--s1)",
+              border: "0.5px solid var(--b2)",
+              borderRadius: "12px",
+              overflow: "hidden",
+            }}
+          >
+            {LIMIT_ROWS.map((row, i) => (
               <div
                 key={row.label}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  paddingTop: i === 0 ? 0 : "8px",
-                  paddingBottom: i === arr.length - 1 ? 0 : "8px",
+                  padding: "9px 14px",
                   borderBottom:
-                    i < arr.length - 1 ? "1px solid var(--border)" : "none",
+                    i < LIMIT_ROWS.length - 1
+                      ? "0.5px solid var(--b1)"
+                      : "none",
                 }}
               >
-                <span
-                  className="font-dm-sans"
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 300,
-                    color: "var(--text-dim)",
-                  }}
-                >
+                <span style={{ ...sans, fontSize: "12px", color: "var(--t2)" }}>
                   {row.label}
                 </span>
                 <span
-                  className="font-dm-sans"
                   style={{
-                    fontSize: "12px",
-                    fontWeight: 500,
-                    color: row.highlight
-                      ? "var(--accent-blue)"
-                      : "var(--text-muted)",
+                    ...mono,
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    color: "var(--t1)",
                   }}
                 >
                   {row.value}
@@ -300,106 +283,161 @@ export default async function AnalysisPage() {
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Card 3: Recent Analyses */}
+        {/* Quota */}
+        <div
+          style={{
+            background: "var(--s1)",
+            border: "0.5px solid var(--b2)",
+            borderRadius: "12px",
+            padding: "14px 16px",
+          }}
+        >
           <div
             style={{
-              border: "1px solid var(--border)",
-              borderRadius: "14px",
-              background: "var(--bg-card)",
-              padding: "20px 22px",
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              marginBottom: "8px",
             }}
           >
-            <p
-              className="font-dm-sans"
+            <span style={{ ...sans, fontSize: "12px", color: "var(--t2)" }}>
+              Analyses this month
+            </span>
+            <span
               style={{
+                ...mono,
                 fontSize: "11px",
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--text-dimmer)",
-                fontWeight: 500,
-                marginBottom: "14px",
+                fontWeight: 700,
+                color: "var(--yellow)",
               }}
             >
-              Recent analyses
-            </p>
-            {recentAnalyses.length === 0 ? (
+              {usedThisMonth} / {FREE_MONTHLY_LIMIT}
+            </span>
+          </div>
+          <div
+            style={{
+              height: "4px",
+              background: "var(--s2)",
+              borderRadius: "2px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                background: "var(--yellow)",
+                borderRadius: "2px",
+                width: `${quotaPct}%`,
+              }}
+            />
+          </div>
+          <p
+            style={{
+              ...sans,
+              fontSize: "11px",
+              color: "var(--t3)",
+              marginTop: "6px",
+            }}
+          >
+            {remaining} {remaining === 1 ? "analysis" : "analyses"} remaining.
+            Upgrade for unlimited.
+          </p>
+        </div>
+
+        {/* Recent analyses */}
+        {recentAnalyses.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <p
-                className="font-dm-sans"
                 style={{
-                  fontSize: "12px",
-                  fontWeight: 300,
-                  color: "var(--text-dimmer)",
+                  ...mono,
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  letterSpacing: "2.5px",
+                  textTransform: "uppercase",
+                  color: "var(--t3)",
                 }}
               >
-                No analyses yet.
+                Recent analyses
               </p>
-            ) : (
-              recentAnalyses.map((analysis, i) => {
+              <Link
+                href="/analysis/history"
+                style={{
+                  ...sans,
+                  fontSize: "11px",
+                  color: "var(--t3)",
+                  textDecoration: "none",
+                }}
+              >
+                View all →
+              </Link>
+            </div>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "6px" }}
+            >
+              {recentAnalyses.map((analysis) => {
                 const report =
                   analysis.report as unknown as AnalysisReport | null;
-                const topPriority = report?.top_priorities?.[0];
                 const methodLabel =
                   typeof analysis.method === "string"
                     ? analysis.method.toUpperCase()
                     : "CFOP";
-                const title = topPriority
-                  ? `${methodLabel} — ${topPriority}`
-                  : methodLabel;
-                const duration = report?.estimated_total_time ?? "";
-                const date = formatDate(analysis.created_at as string);
-                const meta = [date, duration].filter(Boolean).join(" · ");
+                const solveTime = fmtTime(report?.estimated_total_time);
+                const date = fmtDate(analysis.created_at as string);
 
                 return (
                   <Link
                     key={analysis.id as string}
                     href={`/analysis/${analysis.id as string}`}
-                    className="anl-recent-row font-dm-sans"
-                    style={{
-                      paddingTop: i === 0 ? 0 : "8px",
-                      paddingBottom: i < recentAnalyses.length - 1 ? "8px" : 0,
-                      borderBottom:
-                        i < recentAnalyses.length - 1
-                          ? "1px solid var(--border)"
-                          : "none",
-                    }}
+                    className="anl-recent-link"
                   >
                     <div
                       style={{
                         width: "6px",
                         height: "6px",
                         borderRadius: "50%",
-                        background: "#22c55e",
+                        background: "var(--green)",
                         flexShrink: 0,
                       }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p
                         style={{
-                          fontSize: "12px",
-                          fontWeight: 400,
-                          color: "var(--text-muted)",
+                          ...sans,
+                          fontSize: "12.5px",
+                          fontWeight: 500,
+                          color: "var(--t1)",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {title}
+                        {methodLabel} · {date}
                       </p>
                       <p
                         style={{
-                          fontSize: "11px",
-                          fontWeight: 300,
-                          color: "var(--text-dimmer)",
+                          ...mono,
+                          fontSize: "10px",
+                          color: "var(--t3)",
+                          marginTop: "2px",
                         }}
                       >
-                        {meta}
+                        {solveTime}
                       </p>
                     </div>
                     <span
                       style={{
-                        fontSize: "11px",
-                        color: "var(--text-dimmer)",
+                        ...mono,
+                        fontSize: "13px",
+                        color: "var(--t3)",
                         flexShrink: 0,
                       }}
                     >
@@ -407,11 +445,11 @@ export default async function AnalysisPage() {
                     </span>
                   </Link>
                 );
-              })
-            )}
+              })}
+            </div>
           </div>
-        </div>
-      </div>
+        )}
+      </aside>
     </div>
   );
 }

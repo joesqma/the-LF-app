@@ -28,6 +28,27 @@ interface Props {
   userTier: "free" | "premium" | "lifetime";
 }
 
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
+
+function SkeletonBlock({ height }: { height: number }) {
+  return (
+    <div
+      style={{
+        height: `${height}px`,
+        background: "var(--s1)",
+        border: "0.5px solid var(--b1)",
+        borderRadius: "12px",
+        opacity: 0.6,
+      }}
+    />
+  );
+}
+
 export function AnalysisResultClient({
   analysis,
   videoUrl,
@@ -95,54 +116,104 @@ export function AnalysisResultClient({
     void triggerAnalysis();
   }
 
+  // ── Processing state ───────────────────────────────────────────────────────
+
   if (status === "pending" || status === "processing") {
     return (
-      <div className="flex flex-col gap-6">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">
+      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ marginBottom: "20px" }}>
+          <p
+            style={{
+              ...sans,
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "var(--t1)",
+              letterSpacing: "-0.5px",
+            }}
+          >
             Analysing your solve…
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          </p>
+          <p
+            style={{
+              ...sans,
+              fontSize: "13px",
+              fontWeight: 400,
+              color: "var(--t3)",
+              marginTop: "4px",
+            }}
+          >
             Gemini is watching frame-by-frame. Usually takes 10–30 seconds.
           </p>
         </div>
-        <div className="flex flex-col gap-3">
-          <div className="h-40 animate-pulse rounded-xl border border-border bg-card" />
-          {(["p1", "p2", "p3", "p4", "p5"] as const).map((k) => (
-            <div
-              key={k}
-              className="h-12 animate-pulse rounded-xl border border-border bg-card"
-            />
-          ))}
-        </div>
+        <SkeletonBlock height={160} />
+        <SkeletonBlock height={48} />
+        <SkeletonBlock height={48} />
+        <SkeletonBlock height={48} />
+        <SkeletonBlock height={48} />
       </div>
     );
   }
 
+  // ── Failed state ──────────────────────────────────────────────────────────
+
   if (status === "failed") {
     return (
-      <div className="flex flex-col items-start gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">
+      <div>
+        <div
+          style={{
+            position: "relative",
+            background: "var(--s1)",
+            border: "0.5px solid var(--b2)",
+            borderRadius: "14px",
+            padding: "20px 22px",
+            overflow: "hidden",
+            marginBottom: "16px",
+          }}
+        >
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "2px",
+              background: "var(--red)",
+            }}
+          />
+          <p
+            style={{
+              ...sans,
+              fontSize: "16px",
+              fontWeight: 700,
+              color: "var(--t1)",
+              marginBottom: "6px",
+            }}
+          >
             Analysis failed
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Something went wrong processing your video. You can try again or
-            upload a new video.
+          </p>
+          <p
+            style={{
+              ...sans,
+              fontSize: "13px",
+              fontWeight: 400,
+              color: "var(--t3)",
+              lineHeight: 1.6,
+            }}
+          >
+            Something went wrong processing your video. You can retry or upload
+            a new video.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div style={{ display: "flex", gap: "8px" }}>
           <button
             type="button"
             onClick={retryAnalysis}
-            className="rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80"
+            className="cb-primary-btn"
           >
-            Try Again
+            Try again
           </button>
-          <Link
-            href="/analysis"
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
+          <Link href="/analysis" className="cb-ghost-btn">
             New analysis
           </Link>
         </div>
@@ -150,21 +221,68 @@ export function AnalysisResultClient({
     );
   }
 
+  // ── Complete state ────────────────────────────────────────────────────────
+
   if (status === "complete" && report) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-start justify-between">
-          <p className="text-xs text-muted-foreground">
-            {analysis.method?.toUpperCase()} · {formatDate(analysis.created_at)}
-          </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        {/* Header row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span
+              style={{
+                ...mono,
+                fontSize: "9px",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                background: "var(--blue-dim)",
+                color: "var(--blue)",
+                borderRadius: "20px",
+                padding: "2px 8px",
+              }}
+            >
+              {analysis.method?.toUpperCase() ?? "CFOP"}
+            </span>
+            <span
+              style={{
+                ...mono,
+                fontSize: "11px",
+                fontWeight: 400,
+                color: "var(--t3)",
+              }}
+            >
+              {formatDate(analysis.created_at)}
+            </span>
+          </div>
           <Link
             href="/analysis"
-            className="text-xs text-muted-foreground hover:text-foreground"
+            style={{
+              ...mono,
+              fontSize: "11px",
+              fontWeight: 400,
+              color: "var(--t3)",
+              textDecoration: "none",
+              transition: "color 150ms",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--t2)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--t3)";
+            }}
           >
             ← New analysis
           </Link>
         </div>
 
+        {/* Video */}
         {videoUrl && (
           // biome-ignore lint/a11y/useMediaCaption: user-uploaded solve video, captions not applicable
           <video
@@ -172,8 +290,14 @@ export function AnalysisResultClient({
             src={videoUrl}
             controls
             playsInline
-            className="w-full rounded-xl border border-border bg-black"
-            style={{ maxHeight: "360px" }}
+            style={{
+              width: "100%",
+              borderRadius: "14px",
+              border: "0.5px solid var(--b2)",
+              background: "#000",
+              maxHeight: "400px",
+              display: "block",
+            }}
           />
         )}
 

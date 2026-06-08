@@ -15,60 +15,53 @@ const FACE_COLORS = {
   back: "#0046ad", // blue
 } as const;
 
-// Light gray body — the plastic between tiles
-const BODY_COLOR = "#e2e2e2";
-
 const SIZE = 0.9; // cubie size
 const GAP = 0.06; // gap between cubies
 const STEP = SIZE + GAP;
-const TILE = SIZE * 0.84; // tile width/height (leaves a small body border)
-const EXT = 0.04; // tile extrusion depth
+// Tiles cover the full face (no body border) so the tile IS the piece face.
+// Between-piece separation comes from GAP alone.
+const TILE = SIZE;
+// Each tile is half a cubie deep — together they form the piece volume.
+// No separate body exists, so there is nothing to z-fight against.
+const EXT = SIZE / 2;
+// Tile centre at SIZE/4 → spans from the cubie centre plane (0) to the outer face (SIZE/2).
+const TILE_POS = SIZE / 4;
 
-// For each possible outer face: which axis/dir triggers it, its color, and
-// how to position + rotate the tile so it faces outward.
-// Rotation logic: the tile's args are [TILE, TILE, EXT], so its "front" is +Z.
-// We rotate so that front points in the face's outward direction.
 const FACE_CONFIGS = [
   {
     show: (x: number) => x === 1,
     color: FACE_COLORS.right,
-    // Y rotation +π/2 maps local +Z → world +X
-    position: [SIZE / 2, 0, 0] as [number, number, number],
+    position: [TILE_POS, 0, 0] as [number, number, number],
     rotation: [0, Math.PI / 2, 0] as [number, number, number],
   },
   {
     show: (x: number) => x === -1,
     color: FACE_COLORS.left,
-    // Y rotation -π/2 maps local +Z → world -X
-    position: [-(SIZE / 2), 0, 0] as [number, number, number],
+    position: [-TILE_POS, 0, 0] as [number, number, number],
     rotation: [0, -Math.PI / 2, 0] as [number, number, number],
   },
   {
     show: (_: number, y: number) => y === 1,
     color: FACE_COLORS.top,
-    // X rotation -π/2 maps local +Z → world +Y
-    position: [0, SIZE / 2, 0] as [number, number, number],
+    position: [0, TILE_POS, 0] as [number, number, number],
     rotation: [-Math.PI / 2, 0, 0] as [number, number, number],
   },
   {
     show: (_: number, y: number) => y === -1,
     color: FACE_COLORS.bottom,
-    // X rotation +π/2 maps local +Z → world -Y
-    position: [0, -(SIZE / 2), 0] as [number, number, number],
+    position: [0, -TILE_POS, 0] as [number, number, number],
     rotation: [Math.PI / 2, 0, 0] as [number, number, number],
   },
   {
     show: (_: number, __: number, z: number) => z === 1,
     color: FACE_COLORS.front,
-    // No rotation needed — local +Z is already world +Z
-    position: [0, 0, SIZE / 2] as [number, number, number],
+    position: [0, 0, TILE_POS] as [number, number, number],
     rotation: [0, 0, 0] as [number, number, number],
   },
   {
     show: (_: number, __: number, z: number) => z === -1,
     color: FACE_COLORS.back,
-    // Y rotation π maps local +Z → world -Z
-    position: [0, 0, -(SIZE / 2)] as [number, number, number],
+    position: [0, 0, -TILE_POS] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
   },
 ];
@@ -78,18 +71,7 @@ function Cubie({ x, y, z }: { x: number; y: number; z: number }) {
 
   return (
     <group position={[x * STEP, y * STEP, z * STEP]}>
-      {/* Rounded plastic body */}
-      <RoundedBox args={[SIZE, SIZE, SIZE]} radius={0.09} smoothness={4}>
-        <meshPhysicalMaterial
-          color={BODY_COLOR}
-          roughness={0.35}
-          metalness={0}
-          clearcoat={0.6}
-          clearcoatRoughness={0.25}
-        />
-      </RoundedBox>
-
-      {/* Glossy colored tile on each outer face */}
+      {/* Deep colored tiles — no separate body; the tiles are the piece */}
       {visibleFaces.map((face) => (
         <RoundedBox
           key={`${face.position}`}

@@ -2,14 +2,9 @@ import type { AnalysisReport } from "~/types/analysis";
 import type { UserProfile } from "~/types/database";
 import { cfopLessons } from "./content/cfop";
 import { compPrepLessons } from "./content/comp-prep";
-import { rouxLessons } from "./content/roux";
 import type { Lesson } from "./content/types";
 
-const allLessons: Lesson[] = [
-  ...cfopLessons,
-  ...rouxLessons,
-  ...compPrepLessons,
-];
+const allLessons: Lesson[] = [...cfopLessons, ...compPrepLessons];
 
 // cfop_level value → lesson ID that fills the gap
 const CFOP_LEVEL_LESSON: Record<string, string> = {
@@ -99,14 +94,12 @@ export function getRecommendedLesson({
   }
 
   // Next uncompleted lesson in the user's method track
-  const trackLessons = profile.method === "roux" ? rouxLessons : cfopLessons;
-  const methodLabel = profile.method === "roux" ? "Roux" : "CFOP";
-  const nextLesson = trackLessons.find((l) => !completedLessons.includes(l.id));
+  const nextLesson = cfopLessons.find((l) => !completedLessons.includes(l.id));
   if (nextLesson) {
     return {
       kind: "lesson",
       lesson: nextLesson,
-      reason: `Continue your ${methodLabel} journey`,
+      reason: "Continue your CFOP journey",
     };
   }
 

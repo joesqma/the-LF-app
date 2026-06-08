@@ -103,8 +103,8 @@ const SERIES_META: Record<
 > = {
   raw: {
     label: "Raw",
-    color: "#3b82f6",
-    shadow: "rgba(59,130,246,0.3)",
+    color: "#00a8ff",
+    shadow: "rgba(0,168,255,0.3)",
     minSolves: 1,
     lineWidth: 1.5,
   },
@@ -117,8 +117,8 @@ const SERIES_META: Record<
   },
   ao5: {
     label: "Ao5",
-    color: "#22c55e",
-    shadow: "rgba(34,197,94,0.3)",
+    color: "#16c95a",
+    shadow: "rgba(22,201,90,0.3)",
     minSolves: 5,
     lineWidth: 2,
   },
@@ -171,7 +171,7 @@ function drawTrend(
     C_PAD.top + chartH - ((Math.min(t, maxT) - minT) / range) * chartH;
 
   // Grid
-  ctx.strokeStyle = "#1a1a1a";
+  ctx.strokeStyle = "rgba(255,255,255,0.05)";
   ctx.lineWidth = 0.5;
   for (let i = 0; i <= 4; i++) {
     const y = C_PAD.top + (i / 4) * chartH;
@@ -182,8 +182,8 @@ function drawTrend(
   }
 
   // Y labels
-  ctx.font = "10px 'DM Mono', monospace";
-  ctx.fillStyle = "#333333";
+  ctx.font = "10px 'Geist Mono', monospace";
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
   for (let i = 0; i <= 4; i++) {
@@ -244,7 +244,7 @@ function drawTrend(
     return pts;
   };
 
-  // Faint scatter dots — shown when any avg series is active but raw is not
+  // Faint scatter dots when any avg series is active but raw is not
   const hasAvg = SERIES_ORDER.filter((k) => k !== "raw").some((k) =>
     activeSeries.has(k),
   );
@@ -258,7 +258,6 @@ function drawTrend(
     }
   }
 
-  // Raw series
   if (activeSeries.has("raw")) {
     const m = SERIES_META.raw;
     const rawPts: Pt[] = [];
@@ -267,7 +266,7 @@ function drawTrend(
         rawPts.push({ x: xOf(i), y: yOf(times[i]) });
     }
     drawLine(rawPts, m.color, m.shadow, m.lineWidth);
-    ctx.fillStyle = "rgba(59,130,246,0.7)";
+    ctx.fillStyle = "rgba(0,168,255,0.7)";
     for (const pt of rawPts) {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
@@ -275,25 +274,18 @@ function drawTrend(
     }
   }
 
-  // Mo3 (mean of 3, no trimming)
   if (activeSeries.has("mo3") && times.length >= 3) {
     const m = SERIES_META.mo3;
     drawLine(getRollingAvgPts(3, false), m.color, m.shadow, m.lineWidth);
   }
-
-  // Ao5
   if (activeSeries.has("ao5") && times.length >= 5) {
     const m = SERIES_META.ao5;
     drawLine(getRollingAvgPts(5, true), m.color, m.shadow, m.lineWidth);
   }
-
-  // Ao12
   if (activeSeries.has("ao12") && times.length >= 12) {
     const m = SERIES_META.ao12;
     drawLine(getRollingAvgPts(12, true), m.color, m.shadow, m.lineWidth);
   }
-
-  // Ao100
   if (activeSeries.has("ao100") && times.length >= 100) {
     const m = SERIES_META.ao100;
     drawLine(getRollingAvgPts(100, true), m.color, m.shadow, m.lineWidth);
@@ -330,7 +322,7 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
   const binW = chartW / 20;
 
   // Grid
-  ctx.strokeStyle = "#1a1a1a";
+  ctx.strokeStyle = "rgba(255,255,255,0.05)";
   ctx.lineWidth = 0.5;
   for (let i = 0; i <= 4; i++) {
     const y = C_PAD.top + (i / 4) * chartH;
@@ -341,8 +333,8 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
   }
 
   // Y labels
-  ctx.font = "10px 'DM Mono', monospace";
-  ctx.fillStyle = "#333333";
+  ctx.font = "10px 'Geist Mono', monospace";
+  ctx.fillStyle = "rgba(255,255,255,0.25)";
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
   for (let i = 0; i <= 4; i++) {
@@ -359,8 +351,8 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
     const y = C_PAD.top + chartH - bh;
     const bw = binW - 2;
     const g = ctx.createLinearGradient(x, y, x, y + bh);
-    g.addColorStop(0, "rgba(59,130,246,0.65)");
-    g.addColorStop(1, "rgba(59,130,246,0.1)");
+    g.addColorStop(0, "rgba(0,168,255,0.65)");
+    g.addColorStop(1, "rgba(0,168,255,0.08)");
     ctx.fillStyle = g;
     ctx.fillRect(x, y, bw, bh);
   }
@@ -386,7 +378,7 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
     ctx.lineTo(mx, C_PAD.top + chartH);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.font = "10px 'DM Sans', sans-serif";
+    ctx.font = "10px 'Outfit', sans-serif";
     ctx.fillStyle = "#f59e0b";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
@@ -394,25 +386,38 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
   }
 }
 
+// ── Font style objects ────────────────────────────────────────────────────────
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 function StatCard({
   label,
   value,
   sub,
+  valueColor,
   valueSize = 28,
 }: {
   label: string;
   value: string;
   sub: string;
+  valueColor?: string;
   valueSize?: number;
 }) {
   return (
     <div className="st-stat-card">
-      <p className="font-dm-sans st-stat-label">{label}</p>
-      <p className="font-dm-mono st-stat-value" style={{ fontSize: valueSize }}>
+      <p className="st-stat-label">{label}</p>
+      <p
+        className="st-stat-value"
+        style={{ fontSize: valueSize, color: valueColor ?? "var(--t1)" }}
+      >
         {value}
       </p>
-      <p className="font-dm-sans st-stat-sub">{sub}</p>
+      <p className="st-stat-sub">{sub}</p>
     </div>
   );
 }
@@ -428,23 +433,42 @@ function PBCard({
 }) {
   return (
     <div className="st-pb-card">
-      <p className="font-dm-sans st-pb-label">{label}</p>
-      <p className="font-dm-mono st-pb-value">{value}</p>
-      <p className="font-dm-sans st-pb-sub">{sub}</p>
+      <p className="st-pb-label">{label}</p>
+      <p className="st-pb-value">{value}</p>
+      <p className="st-pb-sub">{sub}</p>
     </div>
   );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function CurrCard({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+}) {
+  return (
+    <div className="st-curr-card">
+      <p className="st-curr-label">{label}</p>
+      <p className="st-curr-value">{value}</p>
+      <p className="st-curr-sub">{sub}</p>
+    </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p
-      className="font-syne"
       style={{
-        fontSize: 16,
+        ...mono,
+        fontSize: "9px",
         fontWeight: 700,
-        color: "var(--text-secondary)",
-        letterSpacing: "-0.01em",
-        marginBottom: 14,
+        textTransform: "uppercase",
+        letterSpacing: "2px",
+        color: "var(--t3)",
+        marginBottom: "12px",
       }}
     >
       {children}
@@ -495,10 +519,7 @@ export function StatsClient({ allSolves, sessions }: Props) {
 
   const sessionPuzzleMap = useMemo(() => {
     const map: Record<string, string> = {};
-    // Seed from DB values
     for (const s of sessions) map[s.id] = s.puzzle;
-    // Override with localStorage — the timer stores puzzle-per-session here
-    // and it's always more up-to-date than the DB default of '3×3'
     try {
       const raw = localStorage.getItem("cubewise_timer_prefs");
       if (raw) {
@@ -512,7 +533,7 @@ export function StatsClient({ allSolves, sessions }: Props) {
         }
       }
     } catch {
-      // localStorage unavailable — DB values are used as-is
+      // localStorage unavailable
     }
     return map;
   }, [sessions]);
@@ -585,7 +606,6 @@ export function StatsClient({ allSolves, sessions }: Props) {
     if (histRef.current) drawHist(histRef.current, sessionTimes);
   }, [sessionTimes]);
 
-  // Redraw trend + hist on resize
   useEffect(() => {
     let tid = 0;
     const onResize = () => {
@@ -622,45 +642,50 @@ export function StatsClient({ allSolves, sessions }: Props) {
   return (
     <div
       className="st-scroll"
-      style={{ padding: "40px 40px 60px", minWidth: 0, overflowX: "hidden" }}
+      style={{ padding: "32px 36px 60px", minWidth: 0, overflowX: "hidden" }}
     >
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 36 }}>
+      <div style={{ marginBottom: 32 }}>
         <p
-          className="font-dm-sans"
           style={{
-            fontSize: 11,
-            fontWeight: 500,
+            ...mono,
+            fontSize: "10px",
+            fontWeight: 600,
+            letterSpacing: "2px",
             textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            color: "var(--text-dimmer)",
-            marginBottom: 8,
+            color: "var(--blue)",
+            marginBottom: "6px",
           }}
         >
           Statistics
         </p>
-        <p
-          className="font-syne"
+        <h1
           style={{
-            fontSize: 32,
-            fontWeight: 800,
-            letterSpacing: "-0.025em",
-            color: "var(--text-primary)",
-            marginBottom: 4,
+            ...sans,
+            fontSize: "28px",
+            fontWeight: 700,
+            letterSpacing: "-0.8px",
+            lineHeight: 1.1,
+            color: "var(--t1)",
+            marginBottom: "4px",
           }}
         >
           Your numbers.
-        </p>
+        </h1>
         <p
-          className="font-dm-sans"
-          style={{ fontSize: 13, fontWeight: 300, color: "var(--text-dim)" }}
+          style={{
+            ...sans,
+            fontSize: "13.5px",
+            color: "var(--t2)",
+            lineHeight: 1.5,
+          }}
         >
           All time, all sessions, all events.
         </p>
       </div>
 
-      {/* ── Section 2: Overview ─────────────────────────────────────────── */}
-      <SectionTitle>Overview</SectionTitle>
+      {/* ── Overview ────────────────────────────────────────────────────── */}
+      <SectionLabel>Overview</SectionLabel>
       <div
         style={{
           display: "grid",
@@ -673,11 +698,13 @@ export function StatsClient({ allSolves, sessions }: Props) {
           label="Total time"
           value={hasData ? `${totalH}h ${totalM}m` : "0h 0m"}
           sub="across all sessions"
+          valueColor="var(--orange)"
         />
         <StatCard
           label="Total solves"
           value={allSolves.length.toLocaleString()}
           sub="all events"
+          valueColor="var(--blue)"
         />
         <StatCard
           label="Events"
@@ -696,31 +723,22 @@ export function StatsClient({ allSolves, sessions }: Props) {
         />
       </div>
 
-      {/* ── Section 3: Session ──────────────────────────────────────────── */}
+      {/* ── Session ─────────────────────────────────────────────────────── */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 10,
-          marginBottom: 14,
+          marginBottom: 12,
         }}
       >
-        <p
-          className="font-syne"
-          style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: "var(--text-secondary)",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Session
-        </p>
+        <SectionLabel>Session</SectionLabel>
         {sessions.length > 0 ? (
           <select
             value={sessionId}
             onChange={(e) => setSessionId(e.target.value)}
-            className="font-dm-sans st-session-select"
+            className="st-session-select"
+            style={{ marginTop: "-12px" }}
           >
             {sessions.map((s) => (
               <option key={s.id} value={s.id}>
@@ -729,15 +747,19 @@ export function StatsClient({ allSolves, sessions }: Props) {
             ))}
           </select>
         ) : null}
-        <p
-          className="font-dm-sans"
-          style={{ fontSize: 12, fontWeight: 300, color: "var(--text-dimmer)" }}
+        <span
+          style={{
+            ...mono,
+            fontSize: "10px",
+            color: "var(--t3)",
+            marginTop: "-12px",
+          }}
         >
           {sessionCount} solves
-        </p>
+        </span>
       </div>
 
-      {/* Row 1: Best Single / Best Ao5 / Session Mean */}
+      {/* Row 1: PBs + session mean */}
       <div
         style={{
           display: "grid",
@@ -760,10 +782,11 @@ export function StatsClient({ allSolves, sessions }: Props) {
           label="Session Mean"
           value={sessionMean !== null ? fmt(sessionMean) : "—"}
           sub={`${validTimes.length} solves`}
+          valueColor="var(--yellow)"
         />
       </div>
 
-      {/* Row 2: Current Ao5 / Ao12 / Ao100 */}
+      {/* Row 2: Current averages */}
       <div
         style={{
           display: "grid",
@@ -772,51 +795,25 @@ export function StatsClient({ allSolves, sessions }: Props) {
           marginBottom: 32,
         }}
       >
-        <StatCard
+        <CurrCard
           label="Current Ao5"
           value={currentAo5 !== null ? fmt(currentAo5) : "—"}
           sub="last 5 solves"
         />
-        <StatCard
+        <CurrCard
           label="Current Ao12"
           value={currentAo12 !== null ? fmt(currentAo12) : "—"}
           sub="last 12 solves"
         />
-        <StatCard
+        <CurrCard
           label="Current Ao100"
           value={currentAo100 !== null ? fmt(currentAo100) : "—"}
           sub="last 100 solves"
         />
       </div>
 
-      {/* ── Section 4: Best Stats ────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: 10,
-          marginTop: 24,
-          marginBottom: 14,
-        }}
-      >
-        <p
-          className="font-syne"
-          style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: "var(--text-secondary)",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Best stats
-        </p>
-        <p
-          className="font-dm-sans"
-          style={{ fontSize: 12, fontWeight: 300, color: "var(--text-dimmer)" }}
-        >
-          for this session
-        </p>
-      </div>
+      {/* ── Best stats ──────────────────────────────────────────────────── */}
+      <SectionLabel>Best stats</SectionLabel>
       <div
         style={{
           display: "grid",
@@ -861,19 +858,16 @@ export function StatsClient({ allSolves, sessions }: Props) {
             }}
           >
             <p
-              className="font-dm-sans"
               style={{
-                fontSize: 13,
+                ...sans,
+                fontSize: "13px",
                 fontWeight: 500,
-                color: "var(--text-muted)",
+                color: "var(--t2)",
               }}
             >
               Best Ao5 breakdown
             </p>
-            <p
-              className="font-dm-sans"
-              style={{ fontSize: 11, color: "var(--text-dimmer)" }}
-            >
+            <p style={{ ...mono, fontSize: "10px", color: "var(--t3)" }}>
               brackets = dropped
             </p>
           </div>
@@ -893,13 +887,11 @@ export function StatsClient({ allSolves, sessions }: Props) {
                     <span
                       // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-element window
                       key={i}
-                      className="font-dm-mono"
                       style={{
-                        fontSize: 15,
+                        ...mono,
+                        fontSize: "15px",
                         fontWeight: 400,
-                        color: dropped
-                          ? "var(--text-dimmer)"
-                          : "var(--text-secondary)",
+                        color: dropped ? "var(--t3)" : "var(--t2)",
                       }}
                     >
                       {dropped ? `(${fmt(t)})` : fmt(t)}
@@ -909,20 +901,25 @@ export function StatsClient({ allSolves, sessions }: Props) {
               </div>
               <div style={{ textAlign: "center" }}>
                 <p
-                  className="font-dm-sans"
                   style={{
-                    fontSize: 10,
+                    ...mono,
+                    fontSize: "9px",
+                    fontWeight: 700,
                     textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    color: "var(--text-dimmer)",
+                    letterSpacing: "1.5px",
+                    color: "var(--t3)",
                     marginBottom: 2,
                   }}
                 >
                   average
                 </p>
                 <p
-                  className="font-dm-mono"
-                  style={{ fontSize: 18, fontWeight: 500, color: "#3b82f6" }}
+                  style={{
+                    ...mono,
+                    fontSize: "18px",
+                    fontWeight: 500,
+                    color: "var(--blue)",
+                  }}
                 >
                   {fmt(bestAo5Info.value)}
                 </p>
@@ -930,11 +927,11 @@ export function StatsClient({ allSolves, sessions }: Props) {
             </div>
           ) : (
             <p
-              className="font-dm-sans"
               style={{
+                ...sans,
                 padding: "20px 4px",
-                fontSize: 13,
-                color: "var(--text-dimmer)",
+                fontSize: "13px",
+                color: "var(--t3)",
               }}
             >
               {hasSession ? "Need 5+ solves" : "No session selected"}
@@ -943,10 +940,9 @@ export function StatsClient({ allSolves, sessions }: Props) {
         </div>
       </div>
 
-      {/* ── Section 5: Time Trend ────────────────────────────────────────── */}
-      <SectionTitle>Time trend</SectionTitle>
+      {/* ── Time trend ──────────────────────────────────────────────────── */}
+      <SectionLabel>Time trend</SectionLabel>
       <div className="st-chart-card" style={{ marginBottom: 10 }}>
-        {/* Title row + style toggle */}
         <div
           style={{
             display: "flex",
@@ -956,33 +952,30 @@ export function StatsClient({ allSolves, sessions }: Props) {
           }}
         >
           <p
-            className="font-dm-sans"
             style={{
-              fontSize: 13,
+              ...sans,
+              fontSize: "13px",
               fontWeight: 500,
-              color: "var(--text-muted)",
+              color: "var(--t2)",
             }}
           >
             Solve times over session
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <span
-              className="font-dm-sans"
-              style={{ fontSize: 11, color: "var(--text-dimmer)" }}
-            >
+            <span style={{ ...mono, fontSize: "10px", color: "var(--t3)" }}>
               Style
             </span>
             <button
               type="button"
               onClick={() => setSmooth(true)}
-              className={`font-dm-sans st-toggle-btn${smooth ? " st-toggle-btn-active" : ""}`}
+              className={`st-toggle-btn${smooth ? " st-toggle-btn-active" : ""}`}
             >
               Smooth
             </button>
             <button
               type="button"
               onClick={() => setSmooth(false)}
-              className={`font-dm-sans st-toggle-btn${!smooth ? " st-toggle-btn-active" : ""}`}
+              className={`st-toggle-btn${!smooth ? " st-toggle-btn-active" : ""}`}
             >
               Sharp
             </button>
@@ -1014,7 +1007,7 @@ export function StatsClient({ allSolves, sessions }: Props) {
                   gap: 5,
                   padding: "4px 10px",
                   borderRadius: 6,
-                  border: `1px solid ${active ? meta.color : "var(--border)"}`,
+                  border: `0.5px solid ${active ? meta.color : "var(--b2)"}`,
                   background: active ? `${meta.color}1a` : "transparent",
                   cursor: available ? "pointer" : "not-allowed",
                   opacity: available ? 1 : 0.35,
@@ -1028,15 +1021,15 @@ export function StatsClient({ allSolves, sessions }: Props) {
                     height: 8,
                     borderRadius: "50%",
                     background: active ? meta.color : "transparent",
-                    border: `1.5px solid ${active ? meta.color : "var(--text-dimmer)"}`,
+                    border: `1.5px solid ${active ? meta.color : "var(--t3)"}`,
                     transition: "background 0.15s, border-color 0.15s",
                   }}
                 />
                 <span
-                  className="font-dm-sans"
                   style={{
-                    fontSize: 12,
-                    color: active ? meta.color : "var(--text-muted)",
+                    ...sans,
+                    fontSize: "12px",
+                    color: active ? meta.color : "var(--t3)",
                     transition: "color 0.15s",
                   }}
                 >
@@ -1074,8 +1067,7 @@ export function StatsClient({ allSolves, sessions }: Props) {
                     }}
                   />
                   <span
-                    className="font-dm-sans"
-                    style={{ fontSize: 11, color: "var(--text-dimmer)" }}
+                    style={{ ...mono, fontSize: "10px", color: "var(--t3)" }}
                   >
                     {k === "raw" ? "All times" : `Rolling ${meta.label}`}
                   </span>
@@ -1091,38 +1083,40 @@ export function StatsClient({ allSolves, sessions }: Props) {
         />
       </div>
 
-      {/* ── Section 6: Time Distribution ────────────────────────────────── */}
-      <SectionTitle>Time distribution</SectionTitle>
+      {/* ── Time distribution ───────────────────────────────────────────── */}
+      <SectionLabel>Time distribution</SectionLabel>
       <div className="st-chart-card">
         <div style={{ marginBottom: 8 }}>
           <p
-            className="font-dm-sans"
             style={{
-              fontSize: 13,
+              ...sans,
+              fontSize: "13px",
               fontWeight: 500,
-              color: "var(--text-muted)",
+              color: "var(--t2)",
             }}
           >
             Solve time histogram
           </p>
           {hasSession && medianTime !== null && (
             <p
-              className="font-dm-sans"
               style={{
-                fontSize: 11,
-                color: "var(--text-dimmer)",
+                ...mono,
+                fontSize: "10px",
+                color: "var(--t3)",
                 marginTop: 4,
               }}
             >
               Median:{" "}
-              <span style={{ color: "var(--accent-amber)" }}>
+              <span style={{ color: "var(--yellow)" }}>
                 {(medianTime / 1000).toFixed(2)}s
               </span>
               {" · "}
               Mean:{" "}
-              {sessionMean !== null
-                ? `${(sessionMean / 1000).toFixed(2)}s`
-                : "—"}
+              <span style={{ color: "var(--t2)" }}>
+                {sessionMean !== null
+                  ? `${(sessionMean / 1000).toFixed(2)}s`
+                  : "—"}
+              </span>
               {" · "}
               Std dev:{" "}
               {stdDevTime !== null ? `${(stdDevTime / 1000).toFixed(2)}s` : "—"}

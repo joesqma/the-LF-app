@@ -34,7 +34,6 @@ function formatCs(cs: number): string {
 
 const METHOD_OPTIONS = [
   { value: "cfop", label: "CFOP" },
-  { value: "roux", label: "Roux" },
   { value: "beginner", label: "Beginner method" },
   { value: "unknown", label: "I don't know" },
 ] as const;

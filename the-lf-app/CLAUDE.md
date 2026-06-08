@@ -8,3 +8,7 @@ Detailed rules live in `.claude/rules/`. When adding, updating, or deleting a ru
 - [stack.md](.claude/rules/stack.md) — Framework, language, and tooling overview
 - [styling.md](.claude/rules/styling.md) — Tailwind CSS and design token conventions
 - [supabase.md](.claude/rules/supabase.md) — Database migrations and RLS patterns
+
+## Design System
+Always read and follow the design rules in @docs/DESIGN.md before writing any UI code.
+Do not deviate from the patterns defined there.

@@ -2,7 +2,6 @@ import { CFOP_PHASES, cfopLessons } from "./cfop";
 import { COMP_PREP_PHASES, compPrepLessons } from "./comp-prep";
 import { FIRST_SOLVE_STEPS } from "./first-solve";
 import { GETTING_FASTER_PHASES, gettingFasterLessons } from "./getting-faster";
-import { ROUX_PHASES, rouxLessons } from "./roux";
 import type { Lesson, LessonState, LessonWithState } from "./types";
 
 export type TrackId =
@@ -10,7 +9,6 @@ export type TrackId =
   | "beginner"
   | "foundations"
   | "cfop"
-  | "roux"
   | "getting-faster"
   | "comp-prep";
 
@@ -71,17 +69,6 @@ export const TRACKS: TrackConfig[] = [
     gradient: "linear-gradient(90deg, #3b82f6, #6366f1)",
   },
   {
-    id: "roux",
-    name: "Roux",
-    emoji: "🟧",
-    description:
-      "A block-building method with a low move count. Preferred by many sub-10 solvers worldwide.",
-    soon: true,
-    pillActiveBorder: "#3b1f69",
-    pillActiveBg: "#100920",
-    gradient: "linear-gradient(90deg, #8b5cf6, #a78bfa)",
-  },
-  {
     id: "getting-faster",
     name: "Getting Faster",
     emoji: "📈",
@@ -107,7 +94,6 @@ export const TRACKS: TrackConfig[] = [
 
 const TRACK_LESSONS: Partial<Record<TrackId, Lesson[]>> = {
   cfop: cfopLessons,
-  roux: rouxLessons,
   "getting-faster": gettingFasterLessons,
   "comp-prep": compPrepLessons,
 };
@@ -116,7 +102,6 @@ export const TRACK_PHASE_ORDER_MAP: Partial<
   Record<TrackId, readonly string[]>
 > = {
   cfop: CFOP_PHASES,
-  roux: ROUX_PHASES,
   "getting-faster": GETTING_FASTER_PHASES,
   "comp-prep": COMP_PREP_PHASES,
 };

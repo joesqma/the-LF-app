@@ -55,10 +55,17 @@ type Phase =
 
 interface Props {
   userId: string;
-  method: "cfop" | "roux" | "beginner";
+  method: "cfop" | "beginner";
   canUpload: boolean;
   scramble: string;
 }
+
+const mono: React.CSSProperties = {
+  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+};
+const sans: React.CSSProperties = {
+  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
+};
 
 export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
   const router = useRouter();
@@ -219,9 +226,10 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
             onClose={() => setShowUpsell(false)}
           />
         )}
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: drop zone handles keyboard via file input button */}
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: keyboard access via browse button */}
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard access via browse button */}
         <div
-          className={["anl-dropzone", dragging ? "anl-dropzone-drag" : ""]
+          className={["anl-upload-zone", dragging ? "anl-upload-zone-drag" : ""]
             .filter(Boolean)
             .join(" ")}
           onDragOver={(e) => {
@@ -230,36 +238,101 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
         >
-          <Upload size={28} style={{ color: "var(--text-dim)" }} />
-          <p
-            className="font-dm-sans"
+          {/* Upload icon box */}
+          <div
             style={{
+              width: "44px",
+              height: "44px",
+              borderRadius: "12px",
+              background: "var(--blue-dim)",
+              border: "0.5px solid rgba(0,168,255,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "4px",
+            }}
+          >
+            <Upload
+              size={22}
+              strokeWidth={1.5}
+              aria-hidden="true"
+              style={{ color: "var(--blue)" }}
+            />
+          </div>
+
+          <p
+            style={{
+              ...sans,
               fontSize: "14px",
-              fontWeight: 500,
-              color: "var(--text-secondary)",
-              marginTop: "14px",
+              fontWeight: 600,
+              color: "var(--t1)",
             }}
           >
-            Drop a solve video here
+            Drop your solve video here
           </p>
+
           <p
-            className="font-dm-sans"
             style={{
-              fontSize: "11px",
-              fontWeight: 300,
-              color: "var(--text-dimmer)",
-              marginTop: "6px",
+              ...mono,
+              fontSize: "10px",
+              color: "var(--t3)",
+              lineHeight: 1.7,
             }}
           >
-            MP4 · MOV · WebM · max 200 MB · max 2 min
+            Max 2 min · Max 200 MB
           </p>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "6px",
+              justifyContent: "center",
+              marginTop: "2px",
+            }}
+          >
+            {(["MP4", "MOV", "WEBM"] as const).map((fmt) => (
+              <span
+                key={fmt}
+                style={{
+                  ...mono,
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  padding: "3px 8px",
+                  borderRadius: "5px",
+                  background: "var(--s2)",
+                  border: "0.5px solid var(--b2)",
+                  color: "var(--t3)",
+                  letterSpacing: "1px",
+                }}
+              >
+                {fmt}
+              </span>
+            ))}
+          </div>
+
           <button
             type="button"
-            onClick={() => inputRef.current?.click()}
+            onClick={(e) => {
+              e.stopPropagation();
+              inputRef.current?.click();
+            }}
             disabled={phase.kind === "validating"}
-            className="anl-browse-btn font-dm-sans"
-            style={{ marginTop: "20px" }}
+            style={{
+              ...sans,
+              background: "var(--blue)",
+              color: "#01111f",
+              border: "none",
+              borderRadius: "8px",
+              padding: "9px 22px",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: phase.kind === "validating" ? "default" : "pointer",
+              opacity: phase.kind === "validating" ? 0.4 : 1,
+              marginTop: "6px",
+              transition: "opacity 150ms",
+            }}
           >
             {phase.kind === "validating" ? "Checking…" : "Browse file"}
           </button>
@@ -276,12 +349,10 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
           >
             <AlertTriangle
               size={12}
-              style={{ color: "#ef4444", flexShrink: 0 }}
+              aria-hidden="true"
+              style={{ color: "var(--red)", flexShrink: 0 }}
             />
-            <span
-              className="font-dm-sans"
-              style={{ fontSize: "12px", color: "#ef4444" }}
-            >
+            <span style={{ ...sans, fontSize: "12px", color: "var(--red)" }}>
               {phase.message}
             </span>
           </div>
@@ -311,33 +382,39 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
         )}
         <div
           style={{
-            border: "1px solid var(--border)",
+            border: "0.5px solid var(--b2)",
             borderRadius: "14px",
-            padding: "18px 20px",
-            background: "var(--bg-card)",
+            padding: "16px 20px",
+            background: "var(--s1)",
             display: "flex",
             flexDirection: "column",
             gap: "16px",
           }}
         >
           <div
-            style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}
+            style={{
+              display: "flex",
+              gap: "12px",
+              alignItems: "flex-start",
+            }}
           >
             <Film
-              size={20}
+              size={16}
+              strokeWidth={1.5}
+              aria-hidden="true"
               style={{
-                color: "var(--text-dim)",
+                color: "var(--t3)",
                 flexShrink: 0,
-                marginTop: "1px",
+                marginTop: "2px",
               }}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p
-                className="font-dm-sans"
                 style={{
+                  ...sans,
                   fontSize: "13px",
                   fontWeight: 500,
-                  color: "var(--text-secondary)",
+                  color: "var(--t1)",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -346,11 +423,12 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
                 {phase.file.name}
               </p>
               <p
-                className="font-dm-sans"
                 style={{
-                  fontSize: "11px",
-                  fontWeight: 300,
-                  color: "var(--text-dimmer)",
+                  ...mono,
+                  fontSize: "10px",
+                  fontWeight: 400,
+                  color: "var(--t3)",
+                  marginTop: "2px",
                 }}
               >
                 {fmtDuration(phase.duration)} · {fmtBytes(phase.file.size)}
@@ -359,15 +437,15 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
             <button
               type="button"
               onClick={() => setPhase({ kind: "idle" })}
-              className="anl-change-btn font-dm-sans"
+              className="anl-change-btn"
             >
-              Change file
+              Change
             </button>
           </div>
           <button
             type="button"
             onClick={handleUpload}
-            className="anl-analyse-btn font-dm-sans"
+            className="anl-analyse-btn"
           >
             Analyse solve →
           </button>
@@ -381,27 +459,29 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
   return (
     <div
       style={{
-        border: "1px solid var(--border)",
+        border: "0.5px solid var(--b2)",
         borderRadius: "14px",
-        padding: "18px 20px",
-        background: "var(--bg-card)",
+        padding: "16px 20px",
+        background: "var(--s1)",
         display: "flex",
         flexDirection: "column",
         gap: "16px",
       }}
     >
-      <div style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
         <Film
-          size={20}
-          style={{ color: "var(--text-dim)", flexShrink: 0, marginTop: "1px" }}
+          size={16}
+          strokeWidth={1.5}
+          aria-hidden="true"
+          style={{ color: "var(--t3)", flexShrink: 0, marginTop: "2px" }}
         />
         <div style={{ flex: 1, minWidth: 0 }}>
           <p
-            className="font-dm-sans"
             style={{
+              ...sans,
               fontSize: "13px",
               fontWeight: 500,
-              color: "var(--text-secondary)",
+              color: "var(--t1)",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -410,11 +490,12 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
             {phase.file.name}
           </p>
           <p
-            className="font-dm-sans"
             style={{
-              fontSize: "11px",
-              fontWeight: 300,
-              color: "var(--text-dimmer)",
+              ...mono,
+              fontSize: "10px",
+              fontWeight: 400,
+              color: "var(--t3)",
+              marginTop: "2px",
             }}
           >
             {fmtDuration(phase.duration)} · {fmtBytes(phase.file.size)}
@@ -425,8 +506,8 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
         <div
           style={{
             height: "2px",
-            background: "#1d1d1d",
-            borderRadius: "2px",
+            background: "var(--b1)",
+            borderRadius: "0",
             overflow: "hidden",
             marginBottom: "8px",
           }}
@@ -434,16 +515,19 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
           <div
             style={{
               height: "100%",
-              background: "var(--accent-blue)",
+              background: "var(--blue)",
               width: `${phase.progress}%`,
-              borderRadius: "2px",
-              transition: "width 0.2s",
+              transition: "width 150ms",
             }}
           />
         </div>
         <p
-          className="font-dm-sans"
-          style={{ fontSize: "11px", color: "var(--text-dimmer)" }}
+          style={{
+            ...mono,
+            fontSize: "10px",
+            fontWeight: 400,
+            color: "var(--t3)",
+          }}
         >
           {phase.progress}% · Uploading…
         </p>

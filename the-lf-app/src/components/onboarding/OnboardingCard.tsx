@@ -80,16 +80,30 @@ export function OnboardingCard({
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {question.options?.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => onAnswer(option)}
-              className="w-full rounded-xl border border-border bg-card px-5 py-4 text-left text-sm font-medium text-card-foreground transition-colors hover:border-foreground/30 hover:bg-accent"
-            >
-              {option}
-            </button>
-          ))}
+          {question.options?.map((option) => {
+            const isComingSoon = question.comingSoon?.includes(option);
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => !isComingSoon && onAnswer(option)}
+                disabled={isComingSoon}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-xl border border-border bg-card px-5 py-4 text-left text-sm font-medium text-card-foreground transition-colors",
+                  isComingSoon
+                    ? "cursor-not-allowed opacity-50"
+                    : "hover:border-foreground/30 hover:bg-accent",
+                )}
+              >
+                <span>{option}</span>
+                {isComingSoon && (
+                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                    Under development
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

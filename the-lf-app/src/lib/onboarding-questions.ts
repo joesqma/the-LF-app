@@ -16,6 +16,7 @@ export interface Question {
   text: string;
   type?: "options" | "text";
   options?: string[];
+  comingSoon?: string[];
   placeholder?: string;
   showIf?: (answers: OnboardingAnswers) => boolean;
 }
@@ -59,6 +60,7 @@ export const QUESTIONS: Question[] = [
     id: "method",
     text: "What solving method do you use?",
     options: ["CFOP", "Roux", "Beginner method", "I don't know"],
+    comingSoon: ["Roux"],
   },
   {
     id: "cfopLevel",

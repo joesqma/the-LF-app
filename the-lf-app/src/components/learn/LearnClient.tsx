@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { cn } from "~/lib/utils";
 
-type TrackId = "cfop" | "roux" | "comp";
+type TrackId = "cfop" | "comp";
 
 const TRACKS: { id: TrackId; name: string }[] = [
   { id: "cfop", name: "CFOP" },
-  { id: "roux", name: "Roux" },
   { id: "comp", name: "Competition Prep" },
 ];
 
@@ -22,13 +21,6 @@ const LESSONS: Record<
     { title: "2-look OLL", time: "~20 min" },
     { title: "Full PLL", time: "~45 min" },
     { title: "Fingertrick optimisation", time: "~15 min" },
-  ],
-  roux: [
-    { title: "First Block (FB)", time: "~18 min" },
-    { title: "Second Square (SS)", time: "~12 min" },
-    { title: "CMLL", time: "~30 min" },
-    { title: "LSE: Edge Orientation", time: "~10 min" },
-    { title: "LSE: UL/UR & EP", time: "~14 min" },
   ],
   comp: [
     { title: "Reading a WCA scorecard", time: "~5 min" },
