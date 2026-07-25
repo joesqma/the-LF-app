@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { cn } from "~/lib/utils";
 
 export interface Solve {
@@ -107,65 +107,56 @@ function SolveDetail({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4">
-      <div className="w-full max-w-xs rounded-xl border border-border bg-card p-5 shadow-sm">
-        <div className="mb-4 flex items-start justify-between">
-          <p className="font-mono text-2xl font-bold tabular-nums text-foreground">
-            {fmtSolveTime(solve)}
-          </p>
+    <div className="timer-modal-backdrop">
+      <div className="timer-modal timer-solve-detail">
+        <div className="timer-modal__header">
+          <div>
+            <span className="timer-modal__eyebrow">Solve detail</span>
+            <p className="timer-solve-detail__time">{fmtSolveTime(solve)}</p>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="timer-modal__close"
+            aria-label="Close solve details"
           >
-            <X className="h-4 w-4" />
+            <X size={17} />
           </button>
         </div>
 
-        <p className="mb-4 font-mono text-xs leading-relaxed tracking-wide text-muted-foreground">
-          {solve.scramble}
-        </p>
+        <code className="timer-solve-detail__scramble">{solve.scramble}</code>
 
-        <p className="mb-4 text-xs text-muted-foreground">
+        <time className="timer-solve-detail__date">
           {new Date(solve.createdAt).toLocaleString()}
-        </p>
+        </time>
 
-        {/* Penalty toggles */}
-        <div className="mb-4 flex gap-2">
+        <fieldset className="timer-penalty-options">
+          <legend className="sr-only">Solve penalty</legend>
           {([null, "+2", "DNF"] as const).map((p) => (
             <button
               key={String(p)}
               type="button"
               onClick={() => onSetPenalty(solve.id, p)}
-              className={cn(
-                "h-7 rounded-md border px-3 text-xs font-medium transition-colors",
-                solve.penalty === p
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
-              )}
+              className={solve.penalty === p ? "is-active" : undefined}
             >
               {p === null ? "OK" : p}
             </button>
           ))}
-        </div>
+        </fieldset>
 
         {confirmDelete ? (
-          <div className="flex gap-2">
+          <div className="timer-modal__actions">
             <button
               type="button"
               onClick={() => {
                 onDelete(solve.id);
                 onClose();
               }}
-              className="flex h-7 flex-1 items-center justify-center rounded-md bg-destructive text-xs font-medium text-white transition-colors hover:bg-destructive/90"
+              className="is-destructive"
             >
               Delete
             </button>
-            <button
-              type="button"
-              onClick={() => setConfirmDelete(false)}
-              className="flex h-7 flex-1 items-center justify-center rounded-md border border-border text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
+            <button type="button" onClick={() => setConfirmDelete(false)}>
               Cancel
             </button>
           </div>
@@ -173,7 +164,7 @@ function SolveDetail({
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="flex h-7 w-full items-center justify-center rounded-md border border-destructive/50 text-xs font-medium text-destructive transition-colors hover:bg-destructive hover:text-white"
+            className="timer-solve-detail__delete"
           >
             Delete solve
           </button>
@@ -258,68 +249,58 @@ export function SessionPanel({
 
   return (
     <>
-      <div className="flex w-56 shrink-0 flex-col overflow-hidden border-l border-border">
-        {/* Header */}
-        <div className="flex h-10 shrink-0 items-center border-b border-border px-3">
-          <span className="flex-1 truncate text-xs font-medium text-foreground">
-            {sessionName}
-          </span>
-        </div>
+      <aside className="timer-session-panel">
+        <header className="timer-session-panel__header">
+          <div>
+            <span>Session</span>
+            <h2>{sessionName}</h2>
+          </div>
+          <strong>
+            <span>{solves.length}</span> solve{solves.length !== 1 ? "s" : ""}
+          </strong>
+        </header>
 
-        {/* Stats table */}
-        <div className="shrink-0 border-b border-border px-3 py-2">
-          <div className="grid grid-cols-3 gap-x-2 text-xs">
-            <span className="text-muted-foreground" />
-            <span className="text-right text-muted-foreground">curr</span>
-            <span className="text-right text-muted-foreground">best</span>
+        <section className="timer-session-summary" aria-label="Session summary">
+          <span>Session mean</span>
+          <strong>{mean !== null ? fmt(mean) : "—"}</strong>
+        </section>
+
+        <section className="timer-session-stats" aria-label="Session averages">
+          <div className="timer-session-stats__grid">
+            <span />
+            <span>Current</span>
+            <span>Best</span>
             {statRows.map((row) => (
-              <>
+              <Fragment key={row.label}>
+                <span>{row.label}</span>
                 <span
-                  key={`${row.label}-label`}
-                  className="py-0.5 font-mono text-muted-foreground"
-                >
-                  {row.label}
-                </span>
-                <span
-                  key={`${row.label}-curr`}
                   className={cn(
-                    "py-0.5 text-right font-mono tabular-nums",
-                    row.isPB ? "font-bold text-orange-400" : "text-foreground",
+                    "timer-session-stats__value",
+                    row.isPB && "is-pb",
                   )}
                 >
                   {row.current}
                 </span>
-                <span
-                  key={`${row.label}-best`}
-                  className="py-0.5 text-right font-mono tabular-nums text-muted-foreground"
-                >
+                <span className="timer-session-stats__value is-muted">
                   {row.best}
                 </span>
-              </>
+              </Fragment>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Meta */}
-        <div className="shrink-0 border-b border-border px-3 py-1.5 text-xs text-muted-foreground">
-          {solves.length} solve{solves.length !== 1 ? "s" : ""}
-          {mean !== null && ` · mean ${fmt(mean)}`}
-        </div>
-
-        {/* List header */}
-        <div className="grid shrink-0 grid-cols-[20px_1fr_44px_44px] gap-x-1 border-b border-border px-3 py-1 text-xs text-muted-foreground">
+        <div className="timer-solve-list__header">
           <span>#</span>
-          <span>time</span>
-          <span className="text-right">ao5</span>
-          <span className="text-right">ao12</span>
+          <span>Time</span>
+          <span>ao5</span>
+          <span>ao12</span>
         </div>
 
-        {/* Solve list */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="timer-solve-list">
           {solves.length === 0 ? (
-            <p className="px-3 py-4 text-xs text-muted-foreground">
-              No solves yet.
-            </p>
+            <div className="timer-solve-list__empty">
+              <strong>No solves yet</strong>
+            </div>
           ) : (
             solves.map((solve, i) => {
               const rowAo5 = computeAo(solves, 5, i);
@@ -330,29 +311,18 @@ export function SessionPanel({
                   key={solve.id}
                   type="button"
                   onClick={() => setDetailSolve(solve)}
-                  className={cn(
-                    "grid w-full grid-cols-[20px_1fr_44px_44px] gap-x-1 px-3 py-1 text-left text-xs transition-colors hover:bg-accent/60",
-                    isPB && "text-orange-400",
-                  )}
+                  className={cn("timer-solve-row", isPB && "is-pb")}
                 >
-                  <span className="text-muted-foreground">
-                    {solves.length - i}
-                  </span>
-                  <span className="truncate font-mono tabular-nums">
-                    {fmtSolveTime(solve)}
-                  </span>
-                  <span className="text-right font-mono tabular-nums text-muted-foreground">
-                    {rowAo5 !== null ? fmt(rowAo5) : "—"}
-                  </span>
-                  <span className="text-right font-mono tabular-nums text-muted-foreground">
-                    {rowAo12 !== null ? fmt(rowAo12) : "—"}
-                  </span>
+                  <span>{solves.length - i}</span>
+                  <strong>{fmtSolveTime(solve)}</strong>
+                  <span>{rowAo5 !== null ? fmt(rowAo5) : "—"}</span>
+                  <span>{rowAo12 !== null ? fmt(rowAo12) : "—"}</span>
                 </button>
               );
             })
           )}
         </div>
-      </div>
+      </aside>
 
       {detailSolve && (
         <SolveDetail

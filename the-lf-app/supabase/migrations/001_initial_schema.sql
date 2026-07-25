@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     wca_id text,
     wca_data jsonb,
     wca_last_fetched timestamptz,
-    method text CHECK (method IN ('cfop', 'roux', 'beginner', 'unknown')),
+    method text CHECK (method IN ('cfop', 'beginner', 'unknown')),
     current_average text,
     primary_goal text,
     knows_how_to_solve boolean DEFAULT false,
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS public.analyses (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid REFERENCES public.user_profiles(id) ON DELETE CASCADE NOT NULL,
     video_path text,
-    method text CHECK (method IN ('cfop', 'roux')),
+    method text CHECK (method IN ('cfop', 'beginner')),
     status text DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'complete', 'failed')),
     report jsonb,
     created_at timestamptz DEFAULT now()

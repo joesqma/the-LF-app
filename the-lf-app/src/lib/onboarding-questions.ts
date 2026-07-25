@@ -59,8 +59,7 @@ export const QUESTIONS: Question[] = [
   {
     id: "method",
     text: "What solving method do you use?",
-    options: ["CFOP", "Roux", "Beginner method", "I don't know"],
-    comingSoon: ["Roux"],
+    options: ["CFOP", "Beginner method", "I don't know"],
   },
   {
     id: "cfopLevel",

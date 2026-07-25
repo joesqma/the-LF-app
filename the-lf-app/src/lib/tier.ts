@@ -3,7 +3,6 @@ import type { Database } from "~/types/database";
 
 export const FREE_LIMITS = {
   analysesPerMonth: 3,
-  chatMessagesPerAnalysis: 10,
   bookmarks: 20,
 } as const;
 
@@ -23,19 +22,6 @@ export async function canUploadAnalysis(
     .eq("user_id", userId)
     .gte("created_at", startOfMonth);
   return (count ?? 0) < FREE_LIMITS.analysesPerMonth;
-}
-
-export async function canChat(
-  supabase: SupabaseClient<Database>,
-  analysisId: string,
-  userId: string,
-): Promise<boolean> {
-  const { count } = await supabase
-    .from("analysis_chats")
-    .select("*", { count: "exact", head: true })
-    .eq("analysis_id", analysisId)
-    .eq("user_id", userId);
-  return (count ?? 0) < FREE_LIMITS.chatMessagesPerAnalysis;
 }
 
 export async function canBookmark(

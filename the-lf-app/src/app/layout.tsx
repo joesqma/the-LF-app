@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Mono, DM_Sans, Geist_Mono, Outfit, Syne } from "next/font/google";
+import { DM_Sans, Outfit, Roboto_Mono, Syne } from "next/font/google";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -9,10 +9,10 @@ const outfit = Outfit({
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
-  variable: "--font-geist-mono",
+  variable: "--font-roboto-mono",
   display: "swap",
 });
 
@@ -30,13 +30,6 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-dm-mono",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: "Cubewise",
   description: "Your personal AI speedcubing coach",
@@ -51,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${outfit.variable} ${geistMono.variable} ${syne.variable} ${dmSans.variable} ${dmMono.variable}`}
+        className={`${outfit.variable} ${robotoMono.variable} ${syne.variable} ${dmSans.variable}`}
       >
         {children}
       </body>

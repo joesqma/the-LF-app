@@ -33,7 +33,10 @@ Return this exact structure:
       "timestamp_end": "0:00",
       "algorithm_identified": "algorithm name or null",
       "observations": "what you observed",
-      "recommendation": "specific actionable improvement"
+      "recommendation": "specific actionable improvement",
+      "move_sequence": ["R", "U", "R'", "U'"],
+      "move_count": 4,
+      "tps": 3.5
     }
   ],
   "recommended_lesson_ids": ["lesson-id-1", "lesson-id-2"]
@@ -42,8 +45,16 @@ Return this exact structure:
 For CFOP, phases are: Cross, F2L, OLL, PLL.
 For Beginner, phases are: White Cross, White Corners, Middle Layer Edges, Yellow Cross, Yellow Corners.
 
-Focus on: algorithm identification, execution hesitations, phase timing, look-ahead quality.
-Do not attempt frame-precise fingertrick analysis. Do not return anything except the JSON object.`;
+Move recognition rules:
+- Watch the video frame-by-frame and record every face turn in standard WCA notation (U, D, R, L, F, B, U', D', R', L', F', B', U2, D2, R2, L2, F2, B2).
+- Include wide moves (u, d, r, l, f, b and their variants) and slice moves (M, E, S) if visible.
+- move_sequence must list every move in execution order for that phase. If a move is ambiguous or obscured, make your best inference based on cube state before and after.
+- move_count is the total number of moves in move_sequence.
+- tps is move_count divided by the phase duration in seconds, rounded to 2 decimal places.
+- If the video quality or angle makes move detection impossible for a phase, set move_sequence to null, move_count to null, and tps to null.
+
+Focus on: algorithm identification, execution hesitations, phase timing, look-ahead quality, and accurate move-by-move transcription.
+Do not return anything except the JSON object.`;
 
 function mimeFromPath(path: string): string {
   if (path.endsWith(".mov")) return "video/quicktime";
@@ -121,11 +132,20 @@ async function runAnalysis(
 
     const result = await model.generateContent([videoPart, { text: prompt }]);
     const raw = result.response.text().trim();
+    console.log(
+      `[analysis] raw response for ${analysisId}:`,
+      raw.slice(0, 300),
+    );
     const json = raw
       .replace(/^```(?:json)?\n?/, "")
       .replace(/\n?```$/, "")
       .trim();
-    const report = JSON.parse(json) as AnalysisReport;
+    let report: AnalysisReport;
+    try {
+      report = JSON.parse(json) as AnalysisReport;
+    } catch (_parseErr) {
+      throw new Error(`JSON parse failed. Raw response: ${raw.slice(0, 500)}`);
+    }
 
     await admin
       .from("analyses")

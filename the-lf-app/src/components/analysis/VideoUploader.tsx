@@ -3,7 +3,6 @@
 import { AlertTriangle, Film, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
-import { UpsellModal } from "~/components/ui/UpsellModal";
 import { env } from "~/env";
 import { createAnalysis } from "~/lib/actions/analysis";
 import { createClient } from "~/lib/supabase/client";
@@ -56,23 +55,21 @@ type Phase =
 interface Props {
   userId: string;
   method: "cfop" | "beginner";
-  canUpload: boolean;
   scramble: string;
 }
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
 };
 
-export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
+export function VideoUploader({ userId, method, scramble }: Props) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [dragging, setDragging] = useState(false);
-  const [showUpsell, setShowUpsell] = useState(false);
 
   const processFile = useCallback(async (file: File) => {
     setPhase({ kind: "validating" });
@@ -142,11 +139,6 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
   async function handleUpload() {
     if (phase.kind !== "ready") return;
     const { file, duration } = phase;
-
-    if (!canUpload) {
-      setShowUpsell(true);
-      return;
-    }
 
     const uuid = crypto.randomUUID();
     const path = `${userId}/${uuid}.${fileExt(file)}`;
@@ -220,12 +212,6 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
   ) {
     return (
       <div>
-        {showUpsell && (
-          <UpsellModal
-            feature="analysis"
-            onClose={() => setShowUpsell(false)}
-          />
-        )}
         {/* biome-ignore lint/a11y/noStaticElementInteractions: keyboard access via browse button */}
         {/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard access via browse button */}
         <div
@@ -373,84 +359,76 @@ export function VideoUploader({ userId, method, canUpload, scramble }: Props) {
 
   if (phase.kind === "ready") {
     return (
-      <>
-        {showUpsell && (
-          <UpsellModal
-            feature="analysis"
-            onClose={() => setShowUpsell(false)}
-          />
-        )}
+      <div
+        style={{
+          border: "0.5px solid var(--b2)",
+          borderRadius: "14px",
+          padding: "16px 20px",
+          background: "var(--s1)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+        }}
+      >
         <div
           style={{
-            border: "0.5px solid var(--b2)",
-            borderRadius: "14px",
-            padding: "16px 20px",
-            background: "var(--s1)",
             display: "flex",
-            flexDirection: "column",
-            gap: "16px",
+            gap: "12px",
+            alignItems: "flex-start",
           }}
         >
-          <div
+          <Film
+            size={16}
+            strokeWidth={1.5}
+            aria-hidden="true"
             style={{
-              display: "flex",
-              gap: "12px",
-              alignItems: "flex-start",
+              color: "var(--t3)",
+              flexShrink: 0,
+              marginTop: "2px",
             }}
-          >
-            <Film
-              size={16}
-              strokeWidth={1.5}
-              aria-hidden="true"
+          />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p
               style={{
+                ...sans,
+                fontSize: "13px",
+                fontWeight: 500,
+                color: "var(--t1)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {phase.file.name}
+            </p>
+            <p
+              style={{
+                ...mono,
+                fontSize: "10px",
+                fontWeight: 400,
                 color: "var(--t3)",
-                flexShrink: 0,
                 marginTop: "2px",
               }}
-            />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p
-                style={{
-                  ...sans,
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  color: "var(--t1)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {phase.file.name}
-              </p>
-              <p
-                style={{
-                  ...mono,
-                  fontSize: "10px",
-                  fontWeight: 400,
-                  color: "var(--t3)",
-                  marginTop: "2px",
-                }}
-              >
-                {fmtDuration(phase.duration)} · {fmtBytes(phase.file.size)}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setPhase({ kind: "idle" })}
-              className="anl-change-btn"
             >
-              Change
-            </button>
+              {fmtDuration(phase.duration)} · {fmtBytes(phase.file.size)}
+            </p>
           </div>
           <button
             type="button"
-            onClick={handleUpload}
-            className="anl-analyse-btn"
+            onClick={() => setPhase({ kind: "idle" })}
+            className="anl-change-btn"
           >
-            Analyse solve →
+            Change
           </button>
         </div>
-      </>
+        <button
+          type="button"
+          onClick={handleUpload}
+          className="anl-analyse-btn"
+        >
+          Analyse solve →
+        </button>
+      </div>
     );
   }
 

@@ -35,7 +35,7 @@ An AI-powered speedcubing coaching web application that combines structured lear
 
 **Primary Events Supported (V1):** 3x3 only
 
-**Solving Methods Supported (V1):** CFOP, Roux
+**Solving Methods Supported (V1):** CFOP, Beginner
 
 ---
 
@@ -93,7 +93,6 @@ Triggered on first login. Questions are displayed one at a time, full-screen car
 
 **Question 4:** What solving method do you use?
 - CFOP
-- Roux
 - Beginner method
 - I don't know / Other
 
@@ -129,7 +128,7 @@ Persistent sidebar or bottom nav with the following pages:
 The dashboard is intentionally minimal. It surfaces the most important next action for the user.
 
 **Components:**
-- **AI Recommended Lesson Card** — top of page, prominent. Pulls from the Learn section based on user profile and most recent analysis results. Shows lesson title, track (CFOP/Roux/Comp Prep), and an estimated duration.
+- **AI Recommended Lesson Card** — top of page, prominent. Pulls from the Learn section based on user profile and most recent analysis results. Shows lesson title, track (CFOP/Comp Prep), and an estimated duration.
 - **Quick Stats Block** — only shown if the user has logged at least one session. Displays: current Ao5, Ao12, total solves logged, days active.
 - **Quick Navigation Shortcuts** — icon cards linking to: Timer, Analysis, Learn. Clean and minimal.
 - **"Don't Know Where to Start?" CTA** — shown to new users or users with no solves logged. Routes to:
@@ -140,7 +139,7 @@ The dashboard is intentionally minimal. It surfaces the most important next acti
 
 **Route:** `/learn`
 
-Three structured tracks, each with a progressive curriculum:
+Two structured tracks, each with a progressive curriculum:
 
 #### Track 1: CFOP
 Stages (in order):
@@ -150,16 +149,7 @@ Stages (in order):
 4. PLL (2-look PLL first, then full PLL)
 5. Advanced: F2L lookahead, cross efficiency, fingertrick optimisation, TPS training
 
-#### Track 2: Roux
-Stages (in order):
-1. First Block (FB)
-2. Second Square (SS)
-3. Last Pair (LP)
-4. CMLL
-5. LSE (Edge Orientation, then UL/UR, then EP)
-6. Advanced: Block building efficiency, LSE lookahead
-
-#### Track 3: Competition Prep
+#### Track 2: Competition Prep
 Stages (in order):
 1. Reading a WCA scorecard
 2. Avoiding +2 penalties (inspection best practices)
@@ -219,7 +209,7 @@ This is the core feature of the product.
 
 #### Upload Flow
 
-1. User selects their solving method (CFOP or Roux) — pre-filled from profile but editable
+1. User selects their solving method (CFOP or Beginner) — pre-filled from profile but editable
 2. User uploads a video file (mp4, mov, webm)
    - Max duration: 2 minutes
    - Max file size: 200MB (recommended)
@@ -231,7 +221,7 @@ This is the core feature of the product.
 #### V1 Analysis Scope
 
 **What the AI analyses:**
-- Algorithm recognition (which algorithm was used in OLL/PLL or CMLL)
+- Algorithm recognition (which algorithm was used in OLL/PLL)
 - Algorithm execution quality (hesitations, pauses, look-ahead into next phase)
 - Phase timing (approximate time spent in each phase)
 - General form observations at a high level
@@ -250,15 +240,6 @@ This is the core feature of the product.
 | F2L Pair 1–4 | Individual pair time, algorithm used if applicable, hesitation |
 | OLL | Algorithm identified, execution fluency |
 | PLL | Algorithm identified, execution fluency, AUF |
-
-**Roux:**
-| Phase | What's Analysed |
-|---|---|
-| First Block | Time, efficiency (high-level) |
-| Second Square | Time, hesitation |
-| Last Pair | Time |
-| CMLL | Algorithm identified, execution |
-| LSE | EO, UL/UR, EP — time and hesitation |
 
 #### Analysis Report Format
 
@@ -294,7 +275,7 @@ A personal bookmarked video collection.
 
 - Users can save any curated video from the Learn section or from an Analysis report
 - Displayed as a grid of video cards: thumbnail, title, source (e.g., J Perm, CubeSkills), topic tag
-- Filter by: method (CFOP/Roux), phase (Cross, F2L, OLL, etc.), topic
+- Filter by: method (CFOP/Beginner), phase (Cross, F2L, OLL, etc.), topic
 - Stored in `bookmarks` table in Supabase
 
 ### 6.6 Profile & Achievements
@@ -355,7 +336,7 @@ Client
 ### 7.2 Gemini Prompt Design
 
 The prompt sent to Gemini must:
-- Specify the solving method (CFOP or Roux)
+- Specify the solving method (CFOP or Beginner)
 - Request a structured JSON response (not prose)
 - Define the exact JSON schema expected
 - List each phase and what to observe
@@ -473,7 +454,7 @@ avatar_url       text
 wca_id           text NULLABLE
 wca_data         jsonb NULLABLE
 wca_last_fetched timestamptz NULLABLE
-method           text  -- 'cfop' | 'roux' | 'beginner' | 'unknown'
+method           text  -- 'cfop' | 'beginner' | 'unknown'
 current_average  text
 primary_goal     text
 knows_how_to_solve boolean
@@ -511,7 +492,7 @@ created_at   timestamptz DEFAULT now()
 id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
 user_id         uuid REFERENCES user_profiles(id)
 video_path      text  -- Supabase Storage path
-method          text  -- 'cfop' | 'roux'
+method          text  -- 'cfop' | 'beginner'
 status          text  -- 'pending' | 'processing' | 'complete' | 'failed'
 report          jsonb NULLABLE  -- structured Gemini response
 created_at      timestamptz DEFAULT now()
@@ -535,7 +516,7 @@ video_url   text
 title       text
 source      text  -- e.g. 'J Perm', 'CubeSkills'
 topic_tag   text  -- e.g. 'OLL', 'F2L', 'CMLL'
-method_tag  text NULLABLE  -- 'cfop' | 'roux' | null
+method_tag  text NULLABLE  -- 'cfop' | null
 created_at  timestamptz DEFAULT now()
 ```
 
@@ -616,7 +597,7 @@ created_at  timestamptz DEFAULT now()
 - [ ] Dark mode / light mode renders correctly on all pages
 - [ ] Timer works on all major browsers (Chrome, Firefox, Safari)
 - [ ] Video upload works for mp4, mov, webm
-- [ ] Analysis report renders correctly for both CFOP and Roux
+- [ ] Analysis report renders correctly for both CFOP and Beginner
 - [ ] Bookmarking a video persists after page reload
 - [ ] All onboarding paths route correctly
 - [ ] Solve deletion correctly recalculates stats
@@ -638,7 +619,6 @@ The following features were discussed and deliberately deferred to V2:
 - **Social / community features:** Leaderboards, shared analyses, friend comparisons
 - **Mobile app:** React Native or PWA
 - **Custom AI-generated training plans:** Daily drills generated from analysis patterns
-- **Multiple method support in timer:** Roux-specific stats (e.g., move count)
 - **Expanded gamification:** Detailed badge taxonomy, seasonal challenges, XP leaderboards
 
 ---

@@ -92,7 +92,7 @@ export function ImportButton({ userId, onImportComplete }: ImportButtonProps) {
           setResult(null);
           fileRef.current?.click();
         }}
-        className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+        className="timer-topbar__import"
         title="Import cstimer data"
       >
         <Upload className="h-3.5 w-3.5" />

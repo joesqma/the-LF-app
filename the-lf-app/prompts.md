@@ -16,7 +16,7 @@ Build the onboarding questionnaire flow, user profile table, and profile page.
 Build the full solve timer: scrambles, sessions, stats, cstimer import.
 
 ### Phase 4 — Learn Section
-Build the structured course tracks (CFOP, Roux, Competition Prep) with curated video content and lesson pages.
+Build the structured course tracks (CFOP and Competition Prep) with curated video content and lesson pages.
 
 ### Phase 5 — AI Video Analysis
 Build the video upload pipeline, Gemini analysis, structured report UI, and Claude chat integration.
@@ -49,9 +49,8 @@ Build XP/badges, bookmarks library, achievements page, dashboard AI recommendati
 - 3F: Solve management — delete, DNF, +2 actions; stats recalculation
 
 ### Phase 4 Chunks
-- 4A: Learn page layout — three track cards (CFOP, Roux, Comp Prep)
+- 4A: Learn page layout — two track cards (CFOP and Comp Prep)
 - 4B: CFOP track — lesson list with stage progression, lesson detail page
-- 4C: Roux track — lesson list with stage progression, lesson detail page
 - 4D: Competition Prep track — lesson list, lesson detail page
 - 4E: "Save to Library" button wired to `bookmarks` table (stub for Phase 6)
 
@@ -158,10 +157,6 @@ Each step below is scoped to be completable in one focused coding session, produ
 4B-3: Create /app/learn/cfop/[lessonId]/page.tsx — lesson detail: title, embedded YouTube video(s), tips, mark complete button
 4B-4: "Mark Complete" calls server action that appends lesson ID to completed_lessons
 
-4C-1: Define Roux lesson data in /lib/content/roux.ts
-4C-2: Create /app/learn/roux/page.tsx — same pattern as CFOP
-4C-3: Create /app/learn/roux/[lessonId]/page.tsx — lesson detail page
-
 4D-1: Define Competition Prep lesson data in /lib/content/comp-prep.ts
 4D-2: Create /app/learn/comp-prep/page.tsx and [lessonId]/page.tsx
 
@@ -172,7 +167,7 @@ Each step below is scoped to be completable in one focused coding session, produ
 5A-1: Create Supabase Storage bucket: "solve-videos" with private access policy
 5A-2: Confirm analyses table migration is in place; add status enum check constraint
 
-5B-1: Create /app/analysis/page.tsx — upload area with method selector (CFOP/Roux), pre-filled from profile
+5B-1: Create /app/analysis/page.tsx — upload area with method selector (CFOP/Beginner), pre-filled from profile
 5B-2: Create VideoUploader component — drag-and-drop or file picker, client-side validation (type, size)
 5B-3: Validate video duration client-side using HTMLVideoElement before upload
 5B-4: Upload file to Supabase Storage at /videos/{userId}/{uuid}, insert pending row in analyses table
@@ -214,7 +209,7 @@ Each step below is scoped to be completable in one focused coding session, produ
 
 6D-1: Create /app/library/page.tsx — fetch user bookmarks
 6D-2: Create BookmarkCard component — thumbnail (YouTube preview), title, source, topic tag
-6D-3: Add filter bar — method filter (CFOP/Roux/All), phase filter (dynamic from bookmark tags)
+6D-3: Add filter bar — method filter (CFOP/Beginner/All), phase filter (dynamic from bookmark tags)
 6D-4: Add remove bookmark action from library page
 
 6E-1: Create getRecommendedLesson(userProfile, recentAnalysis) server function — maps profile + analysis to a lesson ID
@@ -309,7 +304,7 @@ Tables to create:
    - wca_id text
    - wca_data jsonb
    - wca_last_fetched timestamptz
-   - method text CHECK (method IN ('cfop', 'roux', 'beginner', 'unknown'))
+   - method text CHECK (method IN ('cfop', 'beginner', 'unknown'))
    - current_average text
    - primary_goal text
    - knows_how_to_solve boolean DEFAULT false
@@ -343,7 +338,7 @@ Tables to create:
    - id uuid PRIMARY KEY DEFAULT uuid_generate_v4()
    - user_id uuid REFERENCES user_profiles(id) ON DELETE CASCADE NOT NULL
    - video_path text
-   - method text CHECK (method IN ('cfop', 'roux'))
+   - method text CHECK (method IN ('cfop', 'beginner'))
    - status text DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'complete', 'failed'))
    - report jsonb
    - created_at timestamptz DEFAULT now()
@@ -513,7 +508,7 @@ The onboarding runs after a user's first login, before they see the dashboard. I
    Options: ["Learn to solve for the first time", "Get faster (general improvement)", "Break a specific barrier", "Prepare for competition"]
 
    Question 4: "What solving method do you use?"
-   Options: ["CFOP", "Roux", "Beginner method", "I don't know"]
+   Options: ["CFOP", "Beginner method", "I don't know"]
 
 3. Create /src/components/onboarding/OnboardingCard.tsx:
    - Displays the question text prominently
@@ -551,7 +546,7 @@ Your task is step 2D: build the profile page with WCA linking.
    - Avatar (from Google, displayed as circular image)
    - Display name
    - Read-only: email from auth session
-   - Editable fields: Method (select: CFOP/Roux/Beginner/Unknown), Primary Goal (select from onboarding options)
+   - Editable fields: Method (select: CFOP/Beginner/Unknown), Primary Goal (select from onboarding options)
    - "Save changes" button that calls updateUserProfile server action
 
 3. WCA Linking section (within Profile tab):
@@ -758,29 +753,26 @@ Your task is steps 4A–4B: build the Learn section structure and the CFOP track
    - Phase: PLL — "2-Look PLL", "Full PLL"
    - Phase: Advanced — "F2L Lookahead", "TPS and Fingertricks"
 
-2. Create /src/lib/content/roux.ts — same structure, lessons:
-   - First Block, Second Square, Last Pair, CMLL, LSE (EO, UL/UR, EP), Advanced Roux
-
-3. Create /src/lib/content/comp-prep.ts — same structure, lessons:
+2. Create /src/lib/content/comp-prep.ts — same structure, lessons:
    - Reading a WCA Scorecard, Avoiding +2 Penalties, Pre-Competition Routine, Handling Nerves, Competing Consistently
 
-4. Create /src/app/(app)/learn/page.tsx:
+3. Create /src/app/(app)/learn/page.tsx:
    - PageShell with title "Learn"
-   - Three TrackCard components side by side (grid on desktop, stacked on mobile)
+   - Two TrackCard components side by side (grid on desktop, stacked on mobile)
    - Each card: track name, icon, lesson count, short description, progress bar (completed / total lessons)
    - Progress reads from user_profiles.completed_lessons (array of lesson IDs)
-   - Clicking a card navigates to /learn/cfop, /learn/roux, or /learn/comp-prep
+   - Clicking a card navigates to /learn/cfop or /learn/comp-prep
 
-5. Create /src/components/learn/TrackCard.tsx:
+4. Create /src/components/learn/TrackCard.tsx:
    - Card with track name, description, lesson count, progress bar
 
-6. Create /src/app/(app)/learn/cfop/page.tsx:
+5. Create /src/app/(app)/learn/cfop/page.tsx:
    - List all CFOP lessons grouped by phase
    - Each lesson shown as a row: title, estimated time, completed checkmark if in completed_lessons
    - Lessons within a phase are sequential — a lesson is only accessible if the previous one is completed (or it's the first)
    - Clicking a lesson navigates to /learn/cfop/[lessonId]
 
-7. Create /src/app/(app)/learn/cfop/[lessonId]/page.tsx:
+6. Create /src/app/(app)/learn/cfop/[lessonId]/page.tsx:
    - PageShell with lesson title
    - For each video in the lesson: embed YouTube iframe (use youtube-nocookie.com)
    - Tips section: bulleted list of tips
@@ -793,42 +785,33 @@ Wire up: the full CFOP track should be navigable, lesson completion should persi
 
 ---
 
-### PROMPT 11 — Learn Section: Roux, Comp Prep & Save to Library
+### PROMPT 11 — Learn Section: Comp Prep & Save to Library
 
 ```
 Continuing Cubewise. CFOP track is complete and wired.
 
-Your task is steps 4C–4E: Roux track, Competition Prep track, and Save to Library.
+Your task is steps 4D–4E: Competition Prep track and Save to Library.
 
-1. Create /src/app/(app)/learn/roux/page.tsx:
-   - Same structure as CFOP track list page
-   - Uses /src/lib/content/roux.ts data
-   - Sequential unlock logic per phase
-
-2. Create /src/app/(app)/learn/roux/[lessonId]/page.tsx:
-   - Same structure as CFOP lesson detail page
-   - Uses Roux lesson data
-
-3. Create /src/app/(app)/learn/comp-prep/page.tsx and /[lessonId]/page.tsx:
+1. Create /src/app/(app)/learn/comp-prep/page.tsx and /[lessonId]/page.tsx:
    - Same structure, uses comp-prep lesson data
    - No sequential lock for comp-prep — all lessons freely accessible from the start
 
-4. Create /src/lib/actions/bookmarks.ts:
+2. Create /src/lib/actions/bookmarks.ts:
    - saveBookmark(userId, { videoUrl, title, source, topicTag, methodTag }): upserts to bookmarks table (no duplicates by videoUrl + userId)
    - removeBookmark(userId, videoUrl): deletes matching bookmark
    - getUserBookmarks(userId): returns all bookmarks for user
    - isBookmarked(userId, videoUrl): returns boolean
 
-5. Create /src/components/learn/SaveToLibraryButton.tsx:
+3. Create /src/components/learn/SaveToLibraryButton.tsx:
    - Icon button (Bookmark icon from lucide-react)
    - Filled when bookmarked, outline when not
    - On click: if not bookmarked, call saveBookmark; if bookmarked, call removeBookmark
    - Uses optimistic UI update (toggle state immediately, revert on error)
    - Props: videoUrl, title, source, topicTag, methodTag
 
-6. Add SaveToLibraryButton to each video embed in all lesson detail pages (CFOP, Roux, Comp Prep).
+4. Add SaveToLibraryButton to each video embed in all lesson detail pages (CFOP and Comp Prep).
 
-7. Update /src/app/(app)/learn/page.tsx to show which track has the AI recommendation badge (hardcode to "CFOP – F2L" for now as a placeholder; will be dynamic in Phase 6).
+5. Update /src/app/(app)/learn/page.tsx to show which track has the AI recommendation badge (hardcode to "CFOP – F2L" for now as a placeholder; will be dynamic in Phase 6).
 
 Wire up: saving a video from any lesson detail page should persist to the bookmarks table. Saving the same video twice should not create duplicates.
 ```
@@ -849,7 +832,7 @@ Your task is steps 5A–5B: set up video storage and build the upload UI.
 
 2. Create /src/app/(app)/analysis/page.tsx:
    - PageShell with title "AI Analysis"
-   - Method selector at the top: radio group or segmented control for "CFOP" | "Roux"
+   - Method selector at the top: radio group or segmented control for "CFOP" | "Beginner"
    - Pre-fill from user_profiles.method
    - VideoUploader component below
    - Link to /analysis/history at the top right
@@ -942,7 +925,7 @@ Your task is steps 5F and 6D: build the analysis history page and the library pa
    - Empty state: "No analyses yet — upload your first solve to get started"
 
 2. Create /src/components/analysis/AnalysisCard.tsx:
-   - Shows: date formatted as "Apr 14, 2026", method badge (CFOP/Roux), status badge (Pending/Processing/Complete/Failed)
+   - Shows: date formatted as "Apr 14, 2026", method badge (CFOP/Beginner), status badge (Pending/Processing/Complete/Failed)
    - If complete: shows first line of overall_summary (truncated)
    - Clicking the card navigates to /analysis/{id}
    - If failed: show "Analysis failed" with a retry option
@@ -952,7 +935,7 @@ Your task is steps 5F and 6D: build the analysis history page and the library pa
 4. Create /src/app/(app)/library/page.tsx:
    - PageShell with title "Library"
    - Fetches user's bookmarks via getUserBookmarks()
-   - Filter bar: method filter (All/CFOP/Roux), topic filter (dynamic from unique topic_tags in bookmarks)
+   - Filter bar: method filter (All/CFOP/Beginner), topic filter (dynamic from unique topic_tags in bookmarks)
    - Renders BookmarkCard grid (3 columns desktop, 1 mobile)
    - Empty state: "Save videos from your lessons to build your library"
 

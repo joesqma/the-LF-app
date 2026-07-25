@@ -3,7 +3,7 @@ import type { AnalysisPhase, AnalysisReport } from "~/types/analysis";
 
 interface AnalysisRow {
   id: string;
-  method: "cfop" | "roux" | "beginner" | null;
+  method: "cfop" | "beginner" | null;
   created_at: string;
   report: AnalysisReport | null;
 }
@@ -14,7 +14,6 @@ interface Props {
 
 const METHOD_NAME: Record<string, string> = {
   cfop: "3×3 CFOP",
-  roux: "3×3 Roux",
   beginner: "3×3 Beginner",
 };
 
@@ -77,7 +76,7 @@ function fmtDate(dateStr: string): string {
 }
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",

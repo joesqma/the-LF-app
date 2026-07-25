@@ -19,7 +19,7 @@ const TRACK_ACCENT_DIM: Partial<Record<string, string>> = {
 };
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "~/lib/supabase/server";
 import type { Database } from "~/types/database";
 
-type Method = "cfop" | "roux" | "beginner" | "unknown";
+type Method = "cfop" | "beginner" | "unknown";
 type ProfileUpdate = Database["public"]["Tables"]["user_profiles"]["Update"];
 
 export type WCAData = {

@@ -5,6 +5,9 @@ export type AnalysisPhase = {
   algorithm_identified: string | null;
   observations: string;
   recommendation: string;
+  move_sequence: string[] | null;
+  move_count: number | null;
+  tps: number | null;
 };
 
 export type AnalysisReport = {

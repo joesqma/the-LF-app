@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowRight, Bookmark, Check, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { saveBookmark } from "~/lib/actions/bookmarks";
@@ -35,13 +36,6 @@ const ACTION_CONTENT = {
     meta: ["TIMER", "Ongoing", "Any level"],
   },
 } as const;
-
-const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-};
-const sans: React.CSSProperties = {
-  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
-};
 
 export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
   const [saved, setSaved] = useState(false);
@@ -84,123 +78,20 @@ export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
   const cta = isLesson ? "Start lesson" : (action?.cta ?? "Start");
 
   return (
-    <div
-      style={{
-        position: "relative",
-        background: "var(--s1)",
-        border: "0.5px solid var(--b2)",
-        borderRadius: "14px",
-        overflow: "hidden",
-        display: "grid",
-        gridTemplateColumns: "1fr auto",
-        gap: "24px",
-        padding: "24px",
-      }}
-    >
-      {/* 2px accent bar flush to top */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "2px",
-          background: "var(--blue)",
-        }}
-      />
-
-      {/* Left: content */}
-      <div style={{ minWidth: 0 }}>
-        {/* Eyebrow chip */}
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            marginBottom: "8px",
-          }}
-        >
-          <span
-            aria-hidden="true"
-            style={{
-              display: "inline-block",
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              background: "var(--blue)",
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              ...mono,
-              fontSize: "10px",
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "2px",
-              color: "var(--blue)",
-            }}
-          >
-            AI Recommendation
-          </span>
+    <article className="recommendation-card">
+      <div className="recommendation-card__content">
+        <div className="recommendation-card__eyebrow">
+          <Sparkles size={15} fill="currentColor" />
+          <span>Picked for you</span>
         </div>
+        <p className="recommendation-card__reason">{recommendation.reason}</p>
+        <h2>{title}</h2>
+        <p className="recommendation-card__description">{description}</p>
 
-        {/* Context / reason */}
-        <p
-          style={{
-            ...sans,
-            fontSize: "11px",
-            fontWeight: 400,
-            color: "var(--t3)",
-            marginBottom: "8px",
-            lineHeight: 1.4,
-          }}
-        >
-          {recommendation.reason}
-        </p>
-
-        {/* Title */}
-        <h3
-          style={{
-            ...sans,
-            fontSize: "23px",
-            fontWeight: 700,
-            letterSpacing: "-0.5px",
-            lineHeight: 1.15,
-            color: "var(--t1)",
-            marginBottom: "8px",
-          }}
-        >
-          {title}
-        </h3>
-
-        {/* Description */}
-        <p
-          style={{
-            ...sans,
-            fontSize: "13px",
-            fontWeight: 400,
-            color: "var(--t2)",
-            lineHeight: 1.65,
-            marginBottom: "20px",
-            maxWidth: "540px",
-          }}
-        >
-          {description}
-        </p>
-
-        {/* Button row */}
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            flexWrap: "wrap",
-          }}
-        >
+        <div className="recommendation-card__actions">
           <Link href={href} className="cb-primary-btn">
             {cta}
+            <ArrowRight size={16} />
           </Link>
 
           {isLesson && (
@@ -211,59 +102,24 @@ export function RecommendedLessonCard({ recommendation, dontKnowHref }: Props) {
               disabled={saving}
               className="cb-ghost-btn"
             >
+              {saved ? <Check size={15} /> : <Bookmark size={15} />}
               {saving ? "Saving…" : saved ? "Saved" : "Save for later"}
             </button>
           )}
         </div>
       </div>
 
-      {/* Right: meta pills */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: "6px",
-          paddingTop: "4px",
-          flexShrink: 0,
-        }}
-      >
-        {metaPills.map((pill) => (
-          <div
-            key={pill}
-            style={{
-              background: "var(--s2)",
-              border: "0.5px solid var(--b2)",
-              borderRadius: "6px",
-              padding: "4px 10px",
-              ...mono,
-              fontSize: "10px",
-              fontWeight: 400,
-              color: "var(--t2)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {pill}
-          </div>
-        ))}
-        <p
-          style={{
-            ...mono,
-            fontSize: "10px",
-            fontWeight: 400,
-            color: "var(--t3)",
-            marginTop: "8px",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <Link
-            href={dontKnowHref}
-            style={{ color: "inherit", textDecoration: "none" }}
-          >
-            Don&apos;t know where to start?
-          </Link>
-        </p>
+      <div className="recommendation-card__aside">
+        <div className="recommendation-card__number">NEXT</div>
+        <div className="recommendation-card__meta">
+          {metaPills.map((pill) => (
+            <span key={pill}>{pill}</span>
+          ))}
+        </div>
+        <Link href={dontKnowHref} className="recommendation-card__help">
+          Explore another path <ArrowRight size={14} />
+        </Link>
       </div>
-    </div>
+    </article>
   );
 }

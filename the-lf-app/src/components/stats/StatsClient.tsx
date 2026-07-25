@@ -1,5 +1,22 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  CalendarDays,
+  ChevronDown,
+  Clock3,
+  Gauge,
+  Medal,
+  Target,
+  TimerReset,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+} from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 interface SolveRow {
@@ -85,7 +102,14 @@ function fmtDate(dateStr: string): string {
 }
 
 // ── Canvas draw helpers ───────────────────────────────────────────────────────
-const C_PAD = { top: 14, right: 20, bottom: 28, left: 44 };
+const C_PAD = { top: 22, right: 22, bottom: 34, left: 52 };
+
+function canvasMonoFont(size = 10): string {
+  const family = getComputedStyle(document.body)
+    .getPropertyValue("--font-roboto-mono")
+    .trim();
+  return `${size}px ${family || "'Roboto Mono', monospace"}`;
+}
 
 type SeriesKey = "raw" | "mo3" | "ao5" | "ao12" | "ao100";
 
@@ -146,7 +170,7 @@ function drawTrend(
 ) {
   const dpr = window.devicePixelRatio || 1;
   const cw = canvas.offsetWidth;
-  const ch = 160;
+  const ch = 230;
   if (!cw) return;
   canvas.width = cw * dpr;
   canvas.height = ch * dpr;
@@ -182,7 +206,7 @@ function drawTrend(
   }
 
   // Y labels
-  ctx.font = "10px 'Geist Mono', monospace";
+  ctx.font = canvasMonoFont();
   ctx.fillStyle = "rgba(255,255,255,0.25)";
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
@@ -295,7 +319,7 @@ function drawTrend(
 function drawHist(canvas: HTMLCanvasElement, times: number[]) {
   const dpr = window.devicePixelRatio || 1;
   const cw = canvas.offsetWidth;
-  const ch = 140;
+  const ch = 190;
   if (!cw) return;
   canvas.width = cw * dpr;
   canvas.height = ch * dpr;
@@ -333,7 +357,7 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
   }
 
   // Y labels
-  ctx.font = "10px 'Geist Mono', monospace";
+  ctx.font = canvasMonoFont();
   ctx.fillStyle = "rgba(255,255,255,0.25)";
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
@@ -351,8 +375,8 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
     const y = C_PAD.top + chartH - bh;
     const bw = binW - 2;
     const g = ctx.createLinearGradient(x, y, x, y + bh);
-    g.addColorStop(0, "rgba(0,168,255,0.65)");
-    g.addColorStop(1, "rgba(0,168,255,0.08)");
+    g.addColorStop(0, "rgba(112,223,195,0.72)");
+    g.addColorStop(1, "rgba(112,223,195,0.08)");
     ctx.fillStyle = g;
     ctx.fillRect(x, y, bw, bh);
   }
@@ -386,39 +410,31 @@ function drawHist(canvas: HTMLCanvasElement, times: number[]) {
   }
 }
 
-// ── Font style objects ────────────────────────────────────────────────────────
-const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-};
-const sans: React.CSSProperties = {
-  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
-};
-
 // ── Sub-components ────────────────────────────────────────────────────────────
 function StatCard({
+  Icon,
   label,
   value,
   sub,
-  valueColor,
-  valueSize = 28,
+  tone = "neutral",
 }: {
+  Icon: LucideIcon;
   label: string;
   value: string;
   sub: string;
-  valueColor?: string;
-  valueSize?: number;
+  tone?: "blue" | "orange" | "purple" | "teal" | "neutral";
 }) {
   return (
-    <div className="st-stat-card">
-      <p className="st-stat-label">{label}</p>
-      <p
-        className="st-stat-value"
-        style={{ fontSize: valueSize, color: valueColor ?? "var(--t1)" }}
-      >
-        {value}
-      </p>
+    <article className="st-stat-card" data-tone={tone}>
+      <div className="st-stat-card__top">
+        <span className="st-stat-card__icon">
+          <Icon size={15} strokeWidth={1.8} aria-hidden="true" />
+        </span>
+        <p className="st-stat-label">{label}</p>
+      </div>
+      <p className="st-stat-value">{value}</p>
       <p className="st-stat-sub">{sub}</p>
-    </div>
+    </article>
   );
 }
 
@@ -432,11 +448,14 @@ function PBCard({
   sub: string;
 }) {
   return (
-    <div className="st-pb-card">
-      <p className="st-pb-label">{label}</p>
+    <article className="st-pb-card">
+      <div className="st-card-kicker">
+        <Trophy size={14} strokeWidth={1.8} aria-hidden="true" />
+        <p className="st-pb-label">{label}</p>
+      </div>
       <p className="st-pb-value">{value}</p>
       <p className="st-pb-sub">{sub}</p>
-    </div>
+    </article>
   );
 }
 
@@ -450,37 +469,26 @@ function CurrCard({
   sub: string;
 }) {
   return (
-    <div className="st-curr-card">
-      <p className="st-curr-label">{label}</p>
+    <article className="st-curr-card">
+      <div className="st-card-kicker">
+        <Gauge size={14} strokeWidth={1.8} aria-hidden="true" />
+        <p className="st-curr-label">{label}</p>
+      </div>
       <p className="st-curr-value">{value}</p>
       <p className="st-curr-sub">{sub}</p>
-    </div>
+    </article>
   );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p
-      style={{
-        ...mono,
-        fontSize: "9px",
-        fontWeight: 700,
-        textTransform: "uppercase",
-        letterSpacing: "2px",
-        color: "var(--t3)",
-        marginBottom: "12px",
-      }}
-    >
-      {children}
-    </p>
-  );
+  return <p className="st-section-label">{children}</p>;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 export function StatsClient({ allSolves, sessions }: Props) {
   const [sessionId, setSessionId] = useState<string>(sessions[0]?.id ?? "");
   const [activeSeries, setActiveSeries] = useState<Set<SeriesKey>>(
-    () => new Set<SeriesKey>(["ao5"]),
+    () => new Set<SeriesKey>(["raw", "ao5"]),
   );
   const [smooth, setSmooth] = useState(true);
 
@@ -520,21 +528,6 @@ export function StatsClient({ allSolves, sessions }: Props) {
   const sessionPuzzleMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const s of sessions) map[s.id] = s.puzzle;
-    try {
-      const raw = localStorage.getItem("cubewise_timer_prefs");
-      if (raw) {
-        const parsed = JSON.parse(raw) as {
-          sessionPuzzles?: Record<string, string>;
-        };
-        for (const [sid, puzzle] of Object.entries(
-          parsed.sessionPuzzles ?? {},
-        )) {
-          map[sid] = puzzle;
-        }
-      }
-    } catch {
-      // localStorage unavailable
-    }
     return map;
   }, [sessions]);
 
@@ -551,7 +544,6 @@ export function StatsClient({ allSolves, sessions }: Props) {
 
   const topEvent = methodCounts[0];
   const eventCount = methodCounts.length;
-  const eventNames = methodCounts.map((m) => m.method).join(", ");
 
   // ── Session stats ──
   const sessionCount = sessionSolves.length;
@@ -638,80 +630,120 @@ export function StatsClient({ allSolves, sessions }: Props) {
 
   const hasData = allSolves.length > 0;
   const hasSession = sessionSolves.length > 0;
+  const selectedSession = sessions.find((session) => session.id === sessionId);
+  const activeDayCount = useMemo(
+    () =>
+      new Set(
+        allSolves.map((solve) => new Date(solve.created_at).toDateString()),
+      ).size,
+    [allSolves],
+  );
+  const sessionDayCount = useMemo(
+    () =>
+      new Set(
+        sessionSolves.map((solve) => new Date(solve.created_at).toDateString()),
+      ).size,
+    [sessionSolves],
+  );
+  const dnfCount = sessionSolves.filter(
+    (solve) => solve.penalty === "dnf",
+  ).length;
+  const consistencyScore =
+    sessionMean !== null && stdDevTime !== null && sessionMean > 0
+      ? Math.max(
+          0,
+          Math.min(100, Math.round(100 - (stdDevTime / sessionMean) * 100)),
+        )
+      : null;
+  const comparisonSize = Math.min(10, Math.floor(validTimes.length / 2));
+  const openingAverage =
+    comparisonSize >= 3
+      ? validTimes
+          .slice(0, comparisonSize)
+          .reduce((sum, time) => sum + time, 0) / comparisonSize
+      : null;
+  const recentAverage =
+    comparisonSize >= 3
+      ? validTimes.slice(-comparisonSize).reduce((sum, time) => sum + time, 0) /
+        comparisonSize
+      : null;
+  const paceDelta =
+    openingAverage !== null && recentAverage !== null
+      ? openingAverage - recentAverage
+      : null;
+  const paceIsFaster = paceDelta !== null && paceDelta >= 0;
+  const paceDirection =
+    paceDelta === null ? "neutral" : paceIsFaster ? "faster" : "slower";
+  const paceValue =
+    paceDelta === null
+      ? "Building baseline"
+      : `${fmt(Math.abs(paceDelta))} ${paceIsFaster ? "faster" : "slower"}`;
 
   return (
-    <div
-      className="st-scroll"
-      style={{ padding: "32px 36px 60px", minWidth: 0, overflowX: "hidden" }}
-    >
-      {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 32 }}>
-        <p
-          style={{
-            ...mono,
-            fontSize: "10px",
-            fontWeight: 600,
-            letterSpacing: "2px",
-            textTransform: "uppercase",
-            color: "var(--blue)",
-            marginBottom: "6px",
-          }}
-        >
-          Statistics
-        </p>
-        <h1
-          style={{
-            ...sans,
-            fontSize: "28px",
-            fontWeight: 700,
-            letterSpacing: "-0.8px",
-            lineHeight: 1.1,
-            color: "var(--t1)",
-            marginBottom: "4px",
-          }}
-        >
-          Your numbers.
-        </h1>
-        <p
-          style={{
-            ...sans,
-            fontSize: "13.5px",
-            color: "var(--t2)",
-            lineHeight: 1.5,
-          }}
-        >
-          All time, all sessions, all events.
-        </p>
-      </div>
+    <div className="stats-page st-scroll">
+      <header className="stats-hero">
+        <div className="stats-hero__copy">
+          <p className="stats-eyebrow">
+            <Activity size={14} strokeWidth={1.8} aria-hidden="true" />
+            Performance lab
+          </p>
+          <h1>Performance</h1>
+          <p>
+            {allSolves.length.toLocaleString()} solves across {sessions.length}{" "}
+            {sessions.length === 1 ? "session" : "sessions"}
+          </p>
+        </div>
+
+        {sessions.length > 0 ? (
+          <label className="stats-session-picker">
+            <span>Active session</span>
+            <div>
+              <select
+                value={sessionId}
+                onChange={(event) => setSessionId(event.target.value)}
+              >
+                {sessions.map((session) => (
+                  <option key={session.id} value={session.id}>
+                    {session.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={15} aria-hidden="true" />
+            </div>
+          </label>
+        ) : null}
+      </header>
 
       {/* ── Overview ────────────────────────────────────────────────────── */}
-      <SectionLabel>Overview</SectionLabel>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 10,
-          marginBottom: 32,
-        }}
-      >
+      <SectionLabel>All-time overview</SectionLabel>
+      <div className="stats-overview-grid">
         <StatCard
+          Icon={Clock3}
           label="Total time"
           value={hasData ? `${totalH}h ${totalM}m` : "0h 0m"}
           sub="across all sessions"
-          valueColor="var(--orange)"
+          tone="orange"
         />
         <StatCard
+          Icon={TimerReset}
           label="Total solves"
           value={allSolves.length.toLocaleString()}
           sub="all events"
-          valueColor="var(--blue)"
+          tone="blue"
         />
         <StatCard
-          label="Events"
-          value={hasData ? eventCount.toString() : "0"}
-          sub={hasData ? eventNames : "none"}
+          Icon={CalendarDays}
+          label="Practice days"
+          value={activeDayCount.toString()}
+          sub={
+            hasData
+              ? `${eventCount} ${eventCount === 1 ? "event" : "events"}`
+              : "no activity yet"
+          }
+          tone="teal"
         />
         <StatCard
+          Icon={Medal}
           label="Top event"
           value={topEvent?.method ?? "—"}
           sub={
@@ -719,415 +751,317 @@ export function StatsClient({ allSolves, sessions }: Props) {
               ? `${topEvent.count.toLocaleString()} solves · ${Math.round((topEvent.count / allSolves.length) * 100)}%`
               : "no data"
           }
-          valueSize={24}
+          tone="purple"
         />
       </div>
 
-      {/* ── Session ─────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 12,
-        }}
-      >
-        <SectionLabel>Session</SectionLabel>
-        {sessions.length > 0 ? (
-          <select
-            value={sessionId}
-            onChange={(e) => setSessionId(e.target.value)}
-            className="st-session-select"
-            style={{ marginTop: "-12px" }}
-          >
-            {sessions.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        <span
-          style={{
-            ...mono,
-            fontSize: "10px",
-            color: "var(--t3)",
-            marginTop: "-12px",
-          }}
-        >
-          {sessionCount} solves
-        </span>
-      </div>
-
-      {/* Row 1: PBs + session mean */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 10,
-          marginBottom: 10,
-        }}
-      >
-        <PBCard
-          label="Best Single"
-          value={bestSingle !== null ? fmt(bestSingle) : "—"}
-          sub="session PB"
-        />
-        <PBCard
-          label="Best Ao5"
-          value={bestAo5Info ? fmt(bestAo5Info.value) : "—"}
-          sub="session PB"
-        />
-        <StatCard
-          label="Session Mean"
-          value={sessionMean !== null ? fmt(sessionMean) : "—"}
-          sub={`${validTimes.length} solves`}
-          valueColor="var(--yellow)"
-        />
-      </div>
-
-      {/* Row 2: Current averages */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 10,
-          marginBottom: 32,
-        }}
-      >
-        <CurrCard
-          label="Current Ao5"
-          value={currentAo5 !== null ? fmt(currentAo5) : "—"}
-          sub="last 5 solves"
-        />
-        <CurrCard
-          label="Current Ao12"
-          value={currentAo12 !== null ? fmt(currentAo12) : "—"}
-          sub="last 12 solves"
-        />
-        <CurrCard
-          label="Current Ao100"
-          value={currentAo100 !== null ? fmt(currentAo100) : "—"}
-          sub="last 100 solves"
-        />
-      </div>
-
-      {/* ── Best stats ──────────────────────────────────────────────────── */}
-      <SectionLabel>Best stats</SectionLabel>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: 10,
-          alignItems: "start",
-          marginBottom: 32,
-        }}
-      >
-        {/* Left: Best Ao12 + Ao100 */}
-        <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}
-        >
-          <PBCard
-            label="Best Ao12"
-            value={bestAo12Info ? fmt(bestAo12Info.value) : "—"}
-            sub={
-              bestAo12Info && sessionSolves[bestAo12Info.endIndex]
-                ? fmtDate(sessionSolves[bestAo12Info.endIndex].created_at)
-                : "—"
-            }
-          />
-          <PBCard
-            label="Best Ao100"
-            value={bestAo100Info ? fmt(bestAo100Info.value) : "—"}
-            sub={
-              bestAo100Info && sessionSolves[bestAo100Info.endIndex]
-                ? fmtDate(sessionSolves[bestAo100Info.endIndex].created_at)
-                : "—"
-            }
-          />
-        </div>
-
-        {/* Right: Best Ao5 Breakdown */}
-        <div className="st-chart-card">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 4,
-            }}
-          >
-            <p
-              style={{
-                ...sans,
-                fontSize: "13px",
-                fontWeight: 500,
-                color: "var(--t2)",
-              }}
-            >
-              Best Ao5 breakdown
-            </p>
-            <p style={{ ...mono, fontSize: "10px", color: "var(--t3)" }}>
-              brackets = dropped
-            </p>
+      {hasData ? (
+        <>
+          <div className="stats-section-heading">
+            <div>
+              <p className="stats-eyebrow">
+                <Target size={13} strokeWidth={1.8} aria-hidden="true" />
+                Selected session
+              </p>
+              <h2>Session pulse</h2>
+              <p>{selectedSession?.name ?? "No session selected"}</p>
+            </div>
+            <span className="stats-count-badge">{sessionCount} solves</span>
           </div>
-          {ao5Window.length === 5 && bestAo5Info ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "12px 4px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {ao5Window.map((t, i) => {
-                  const dropped = i === dropFastIdx || i === dropSlowIdx;
-                  return (
-                    <span
-                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-element window
-                      key={i}
-                      style={{
-                        ...mono,
-                        fontSize: "15px",
-                        fontWeight: 400,
-                        color: dropped ? "var(--t3)" : "var(--t2)",
-                      }}
-                    >
-                      {dropped ? `(${fmt(t)})` : fmt(t)}
-                    </span>
-                  );
-                })}
+
+          {/* Row 1: PBs + session mean */}
+          <div className="stats-session-grid stats-session-grid--primary">
+            <PBCard
+              label="Best Single"
+              value={bestSingle !== null ? fmt(bestSingle) : "—"}
+              sub="session PB"
+            />
+            <PBCard
+              label="Best Ao5"
+              value={bestAo5Info ? fmt(bestAo5Info.value) : "—"}
+              sub="session PB"
+            />
+            <StatCard
+              Icon={BarChart3}
+              label="Session Mean"
+              value={sessionMean !== null ? fmt(sessionMean) : "—"}
+              sub={`${validTimes.length} solves`}
+              tone="orange"
+            />
+          </div>
+
+          {/* Row 2: Current averages */}
+          <div className="stats-session-grid stats-session-grid--current">
+            <CurrCard
+              label="Current Ao5"
+              value={currentAo5 !== null ? fmt(currentAo5) : "—"}
+              sub="last 5 solves"
+            />
+            <CurrCard
+              label="Current Ao12"
+              value={currentAo12 !== null ? fmt(currentAo12) : "—"}
+              sub="last 12 solves"
+            />
+            <CurrCard
+              label="Current Ao100"
+              value={currentAo100 !== null ? fmt(currentAo100) : "—"}
+              sub="last 100 solves"
+            />
+          </div>
+
+          <section
+            className="stats-insight-band"
+            data-direction={paceDirection}
+          >
+            <div className="stats-insight-band__icon">
+              {paceDirection === "neutral" ? (
+                <Activity size={20} aria-hidden="true" />
+              ) : paceIsFaster ? (
+                <TrendingDown size={20} aria-hidden="true" />
+              ) : (
+                <TrendingUp size={20} aria-hidden="true" />
+              )}
+            </div>
+            <div className="stats-insight-band__copy">
+              <span>Session pace</span>
+              <strong>{paceValue}</strong>
+              <p>
+                {paceDelta === null
+                  ? "Complete at least six solves to compare your opening and recent pace."
+                  : `Recent ${comparisonSize}-solve pace against your opening ${comparisonSize}.`}
+              </p>
+            </div>
+            <div className="stats-insight-band__metrics">
+              <div>
+                <span>Consistency</span>
+                <strong>
+                  {consistencyScore ?? "—"}
+                  {consistencyScore !== null ? "%" : ""}
+                </strong>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <p
-                  style={{
-                    ...mono,
-                    fontSize: "9px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "1.5px",
-                    color: "var(--t3)",
-                    marginBottom: 2,
-                  }}
-                >
-                  average
-                </p>
-                <p
-                  style={{
-                    ...mono,
-                    fontSize: "18px",
-                    fontWeight: 500,
-                    color: "var(--blue)",
-                  }}
-                >
-                  {fmt(bestAo5Info.value)}
-                </p>
+              <div>
+                <span>Practice days</span>
+                <strong>{sessionDayCount}</strong>
+              </div>
+              <div>
+                <span>DNFs</span>
+                <strong>{dnfCount}</strong>
               </div>
             </div>
-          ) : (
-            <p
-              style={{
-                ...sans,
-                padding: "20px 4px",
-                fontSize: "13px",
-                color: "var(--t3)",
-              }}
-            >
-              {hasSession ? "Need 5+ solves" : "No session selected"}
-            </p>
-          )}
-        </div>
-      </div>
+          </section>
 
-      {/* ── Time trend ──────────────────────────────────────────────────── */}
-      <SectionLabel>Time trend</SectionLabel>
-      <div className="st-chart-card" style={{ marginBottom: 10 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 10,
-          }}
-        >
-          <p
-            style={{
-              ...sans,
-              fontSize: "13px",
-              fontWeight: 500,
-              color: "var(--t2)",
-            }}
-          >
-            Solve times over session
-          </p>
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <span style={{ ...mono, fontSize: "10px", color: "var(--t3)" }}>
-              Style
-            </span>
-            <button
-              type="button"
-              onClick={() => setSmooth(true)}
-              className={`st-toggle-btn${smooth ? " st-toggle-btn-active" : ""}`}
-            >
-              Smooth
-            </button>
-            <button
-              type="button"
-              onClick={() => setSmooth(false)}
-              className={`st-toggle-btn${!smooth ? " st-toggle-btn-active" : ""}`}
-            >
-              Sharp
-            </button>
-          </div>
-        </div>
+          {/* ── Best stats ──────────────────────────────────────────────────── */}
+          <SectionLabel>Best stats</SectionLabel>
+          <div className="stats-best-grid">
+            {/* Left: Best Ao12 + Ao100 */}
+            <div className="stats-best-grid__pbs">
+              <PBCard
+                label="Best Ao12"
+                value={bestAo12Info ? fmt(bestAo12Info.value) : "—"}
+                sub={
+                  bestAo12Info && sessionSolves[bestAo12Info.endIndex]
+                    ? fmtDate(sessionSolves[bestAo12Info.endIndex].created_at)
+                    : "—"
+                }
+              />
+              <PBCard
+                label="Best Ao100"
+                value={bestAo100Info ? fmt(bestAo100Info.value) : "—"}
+                sub={
+                  bestAo100Info && sessionSolves[bestAo100Info.endIndex]
+                    ? fmtDate(sessionSolves[bestAo100Info.endIndex].created_at)
+                    : "—"
+                }
+              />
+            </div>
 
-        {/* Series selection pills */}
-        <div
-          style={{
-            display: "flex",
-            gap: 6,
-            flexWrap: "wrap",
-            marginBottom: 14,
-          }}
-        >
-          {SERIES_ORDER.map((key) => {
-            const meta = SERIES_META[key];
-            const available = sessionTimes.length >= meta.minSolves;
-            const active = activeSeries.has(key);
-            return (
-              <button
-                key={key}
-                type="button"
-                disabled={!available}
-                onClick={() => toggleSeries(key)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "4px 10px",
-                  borderRadius: 6,
-                  border: `0.5px solid ${active ? meta.color : "var(--b2)"}`,
-                  background: active ? `${meta.color}1a` : "transparent",
-                  cursor: available ? "pointer" : "not-allowed",
-                  opacity: available ? 1 : 0.35,
-                  transition: "border-color 0.15s, background 0.15s",
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-block",
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: active ? meta.color : "transparent",
-                    border: `1.5px solid ${active ? meta.color : "var(--t3)"}`,
-                    transition: "background 0.15s, border-color 0.15s",
-                  }}
-                />
-                <span
-                  style={{
-                    ...sans,
-                    fontSize: "12px",
-                    color: active ? meta.color : "var(--t3)",
-                    transition: "color 0.15s",
-                  }}
-                >
-                  {meta.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Active series legend */}
-        {activeSeries.size > 0 && (
-          <div
-            style={{
-              display: "flex",
-              gap: 14,
-              flexWrap: "wrap",
-              marginBottom: 10,
-            }}
-          >
-            {SERIES_ORDER.filter((k) => activeSeries.has(k)).map((k) => {
-              const meta = SERIES_META[k];
-              return (
-                <div
-                  key={k}
-                  style={{ display: "flex", alignItems: "center", gap: 5 }}
-                >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      width: 18,
-                      height: meta.lineWidth,
-                      background: meta.color,
-                      borderRadius: 1,
-                    }}
-                  />
-                  <span
-                    style={{ ...mono, fontSize: "10px", color: "var(--t3)" }}
-                  >
-                    {k === "raw" ? "All times" : `Rolling ${meta.label}`}
-                  </span>
+            {/* Right: Best Ao5 Breakdown */}
+            <div className="st-chart-card stats-ao5-card">
+              <div className="stats-panel-heading">
+                <div>
+                  <span>Best window</span>
+                  <h3>Ao5 breakdown</h3>
                 </div>
-              );
-            })}
+                <p>Brackets are dropped</p>
+              </div>
+              {ao5Window.length === 5 && bestAo5Info ? (
+                <div className="stats-ao5-breakdown">
+                  <div className="stats-ao5-times">
+                    {ao5Window.map((t, i) => {
+                      const dropped = i === dropFastIdx || i === dropSlowIdx;
+                      return (
+                        <span
+                          // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-element window
+                          key={i}
+                          data-dropped={dropped}
+                        >
+                          {dropped ? `(${fmt(t)})` : fmt(t)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  <div className="stats-ao5-result">
+                    <span>Average</span>
+                    <strong>{fmt(bestAo5Info.value)}</strong>
+                  </div>
+                </div>
+              ) : (
+                <p className="stats-panel-empty">
+                  {hasSession ? "Need 5+ solves" : "No session selected"}
+                </p>
+              )}
+            </div>
           </div>
-        )}
 
-        <canvas
-          ref={trendRef}
-          style={{ width: "100%", height: 160, display: "block" }}
-        />
-      </div>
+          <SectionLabel>Time trend</SectionLabel>
+          <div className="st-chart-card stats-trend-card">
+            <div className="stats-chart-heading">
+              <div>
+                <span>Session timeline</span>
+                <h3>Solve times</h3>
+              </div>
+              <fieldset className="stats-chart-style">
+                <legend className="sr-only">Chart line style</legend>
+                <button
+                  type="button"
+                  onClick={() => setSmooth(true)}
+                  className={`st-toggle-btn${smooth ? " st-toggle-btn-active" : ""}`}
+                  aria-pressed={smooth}
+                >
+                  Smooth
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSmooth(false)}
+                  className={`st-toggle-btn${!smooth ? " st-toggle-btn-active" : ""}`}
+                  aria-pressed={!smooth}
+                >
+                  Sharp
+                </button>
+              </fieldset>
+            </div>
 
-      {/* ── Time distribution ───────────────────────────────────────────── */}
-      <SectionLabel>Time distribution</SectionLabel>
-      <div className="st-chart-card">
-        <div style={{ marginBottom: 8 }}>
-          <p
-            style={{
-              ...sans,
-              fontSize: "13px",
-              fontWeight: 500,
-              color: "var(--t2)",
-            }}
-          >
-            Solve time histogram
+            {/* Series selection pills */}
+            <div className="stats-series-controls">
+              {SERIES_ORDER.map((key) => {
+                const meta = SERIES_META[key];
+                const available = sessionTimes.length >= meta.minSolves;
+                const active = activeSeries.has(key);
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={!available}
+                    onClick={() => toggleSeries(key)}
+                    className="stats-series-button"
+                    data-active={active}
+                    aria-pressed={active}
+                    style={
+                      { "--series-color": meta.color } as React.CSSProperties
+                    }
+                  >
+                    <span aria-hidden="true" />
+                    {meta.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {sessionTimes.length >= 2 ? (
+              <canvas
+                ref={trendRef}
+                className="stats-trend-canvas"
+                role="img"
+                aria-label="Solve times and rolling averages across the selected session"
+              />
+            ) : (
+              <div className="stats-chart-empty">
+                Add another solve to draw a trend.
+              </div>
+            )}
+          </div>
+
+          <SectionLabel>Patterns</SectionLabel>
+          <div className="stats-pattern-grid">
+            <div className="st-chart-card stats-distribution-card">
+              <div className="stats-panel-heading">
+                <div>
+                  <span>Time distribution</span>
+                  <h3>Where your solves land</h3>
+                </div>
+                {hasSession && medianTime !== null ? (
+                  <p>
+                    Median <strong>{(medianTime / 1000).toFixed(2)}s</strong>
+                  </p>
+                ) : null}
+              </div>
+              {sessionTimes.length >= 2 ? (
+                <canvas
+                  ref={histRef}
+                  className="stats-histogram-canvas"
+                  role="img"
+                  aria-label="Distribution of solve times in the selected session"
+                />
+              ) : (
+                <div className="stats-chart-empty">
+                  Add another solve to build a distribution.
+                </div>
+              )}
+              <div className="stats-distribution-meta">
+                <span>
+                  Mean {sessionMean !== null ? fmt(sessionMean) : "—"}
+                </span>
+                <span>
+                  Deviation {stdDevTime !== null ? fmt(stdDevTime) : "—"}
+                </span>
+              </div>
+            </div>
+
+            <aside className="stats-event-mix">
+              <div className="stats-panel-heading">
+                <div>
+                  <span>All-time mix</span>
+                  <h3>Events practiced</h3>
+                </div>
+              </div>
+              <div className="stats-event-mix__list">
+                {methodCounts.slice(0, 5).map((event) => (
+                  <div key={event.method} className="stats-event-row">
+                    <div>
+                      <strong>{event.method}</strong>
+                      <span>{event.count.toLocaleString()} solves</span>
+                    </div>
+                    <div className="stats-event-row__track">
+                      <span
+                        style={{
+                          width: `${Math.max(4, Math.round((event.count / allSolves.length) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                    <em>
+                      {Math.round((event.count / allSolves.length) * 100)}%
+                    </em>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </div>
+        </>
+      ) : (
+        <section className="stats-empty-state">
+          <span>
+            <BarChart3 size={22} aria-hidden="true" />
+          </span>
+          <h2>Your first trend starts with one solve.</h2>
+          <p>
+            Open the timer, record a solve, and your performance history will
+            begin here.
           </p>
-          {hasSession && medianTime !== null && (
-            <p
-              style={{
-                ...mono,
-                fontSize: "10px",
-                color: "var(--t3)",
-                marginTop: 4,
-              }}
-            >
-              Median:{" "}
-              <span style={{ color: "var(--yellow)" }}>
-                {(medianTime / 1000).toFixed(2)}s
-              </span>
-              {" · "}
-              Mean:{" "}
-              <span style={{ color: "var(--t2)" }}>
-                {sessionMean !== null
-                  ? `${(sessionMean / 1000).toFixed(2)}s`
-                  : "—"}
-              </span>
-              {" · "}
-              Std dev:{" "}
-              {stdDevTime !== null ? `${(stdDevTime / 1000).toFixed(2)}s` : "—"}
-            </p>
-          )}
-        </div>
-        <canvas
-          ref={histRef}
-          style={{ width: "100%", height: 140, display: "block" }}
-        />
-      </div>
+          <Link href="/timer">
+            Open timer <ArrowRight size={15} aria-hidden="true" />
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

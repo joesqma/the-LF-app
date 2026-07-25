@@ -33,7 +33,7 @@ const TRACK_ACCENT_DIM: Partial<Record<string, string>> = {
 };
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
@@ -644,7 +644,7 @@ function LessonRow({
       {!isLocked && (
         <span
           style={{
-            fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+            fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
             fontSize: "10px",
             color: "var(--t3)",
             whiteSpace: "nowrap",

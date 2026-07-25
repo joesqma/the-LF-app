@@ -5,7 +5,8 @@ import {
   ChevronDown,
   Pencil,
   Plus,
-  Settings,
+  SlidersHorizontal,
+  TimerReset,
   Trash2,
 } from "lucide-react";
 import type React from "react";
@@ -95,185 +96,199 @@ export function TimerTopBar({
   }
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border px-4">
-      {/* Puzzle dropdown */}
-      <div className="relative" ref={puzzleDropdownRef}>
-        <button
-          type="button"
-          onClick={() => setPuzzleOpen((o) => !o)}
-          className={cn(
-            "flex h-8 items-center gap-1 rounded-full px-4 text-sm font-medium transition-colors",
-            puzzleOpen
-              ? "bg-accent text-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground",
-          )}
-        >
-          {activePuzzle}
-          <ChevronDown className="h-3 w-3 shrink-0" />
-        </button>
-
-        {puzzleOpen && (
-          <div className="absolute left-0 top-8 z-50 min-w-32 rounded-xl border border-border bg-card shadow-sm">
-            <ul className="py-1">
-              {PUZZLES.map((p) => (
-                <li key={p}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onPuzzleChange(p);
-                      setPuzzleOpen(false);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-foreground hover:bg-accent"
-                  >
-                    <Check
-                      className={cn(
-                        "h-3 w-3 shrink-0",
-                        p === activePuzzle ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                    {p}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+    <header className="timer-topbar">
+      <div className="timer-topbar__identity">
+        <span className="timer-topbar__mark">
+          <TimerReset size={18} />
+        </span>
+        <div>
+          <span>Practice</span>
+          <strong>Timer</strong>
+        </div>
       </div>
 
-      <span className="mx-1 text-border">|</span>
+      <div className="timer-topbar__selectors">
+        <div className="timer-select-wrap" ref={puzzleDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setPuzzleOpen((o) => !o)}
+            className={cn(
+              "timer-select timer-select--puzzle",
+              puzzleOpen && "is-open",
+            )}
+            aria-expanded={puzzleOpen}
+          >
+            <span>{activePuzzle}</span>
+            <ChevronDown size={14} />
+          </button>
 
-      {/* Session dropdown */}
-      <div className="relative" ref={sessionDropdownRef}>
-        <button
-          type="button"
-          onClick={() => setSessionOpen((o) => !o)}
-          className={cn(
-            "flex h-8 items-center gap-1 rounded-full px-4 text-sm font-medium transition-colors",
-            sessionOpen
-              ? "bg-accent text-foreground"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground",
-          )}
-        >
-          <span className="max-w-32 truncate">{activeSession.name}</span>
-          <ChevronDown className="h-3 w-3 shrink-0" />
-        </button>
-
-        {sessionOpen && (
-          <div className="absolute left-0 top-8 z-50 min-w-48 rounded-xl border border-border bg-card shadow-sm">
-            <ul className="py-1">
-              {sessions.map((s) => (
-                <li key={s.id} className="group flex items-center gap-1 px-2">
-                  {renamingId === s.id ? (
-                    <input
-                      ref={renameInputRef}
-                      value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") commitRename();
-                        if (e.key === "Escape") setRenamingId(null);
-                      }}
-                      onBlur={commitRename}
-                      className="flex-1 rounded border border-border bg-background px-2 py-0.5 text-xs text-foreground outline-none focus:border-ring"
-                    />
-                  ) : (
+          {puzzleOpen && (
+            <div className="timer-menu timer-menu--puzzle">
+              <ul>
+                {PUZZLES.map((p) => (
+                  <li key={p}>
                     <button
                       type="button"
                       onClick={() => {
-                        onSessionChange(s.id);
-                        setSessionOpen(false);
+                        onPuzzleChange(p);
+                        setPuzzleOpen(false);
                       }}
-                      onDoubleClick={() => startRename(s)}
-                      className="flex flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-foreground hover:bg-accent"
+                      className={cn(
+                        "timer-menu__item font-roboto-mono",
+                        p === activePuzzle && "is-active",
+                      )}
                     >
                       <Check
                         className={cn(
-                          "h-3 w-3 shrink-0",
-                          s.id === activeSession.id
-                            ? "opacity-100"
-                            : "opacity-0",
+                          "timer-menu__check",
+                          p === activePuzzle ? "opacity-100" : "opacity-0",
                         )}
+                        size={13}
                       />
-                      <span className="flex-1 truncate">{s.name}</span>
+                      {p}
                     </button>
-                  )}
-                  {renamingId !== s.id &&
-                    (confirmDeleteId === s.id ? (
-                      <div className="flex shrink-0 items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onDeleteSession(s.id);
-                            setConfirmDeleteId(null);
-                            if (s.id === activeSession.id)
-                              setSessionOpen(false);
-                          }}
-                          className="rounded px-1.5 py-0.5 text-xs text-destructive hover:bg-destructive hover:text-white"
-                        >
-                          Delete
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmDeleteId(null)}
-                          className="rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        <span className="timer-topbar__divider" />
+
+        <div className="timer-select-wrap" ref={sessionDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setSessionOpen((o) => !o)}
+            className={cn(
+              "timer-select timer-select--session",
+              sessionOpen && "is-open",
+            )}
+            aria-expanded={sessionOpen}
+          >
+            <span>{activeSession.name}</span>
+            <ChevronDown size={14} />
+          </button>
+
+          {sessionOpen && (
+            <div className="timer-menu timer-menu--session">
+              <ul>
+                {sessions.map((s) => (
+                  <li key={s.id} className="timer-menu__session-row group">
+                    {renamingId === s.id ? (
+                      <input
+                        ref={renameInputRef}
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") commitRename();
+                          if (e.key === "Escape") setRenamingId(null);
+                        }}
+                        onBlur={commitRename}
+                        className="timer-menu__rename"
+                      />
                     ) : (
-                      <div className="flex shrink-0 opacity-0 group-hover:opacity-100">
-                        <button
-                          type="button"
-                          onClick={() => startRename(s)}
-                          className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-                          title="Rename"
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </button>
-                        {sessions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSessionChange(s.id);
+                          setSessionOpen(false);
+                        }}
+                        onDoubleClick={() => startRename(s)}
+                        className={cn(
+                          "timer-menu__item timer-menu__session",
+                          s.id === activeSession.id && "is-active",
+                        )}
+                      >
+                        <Check
+                          className={cn(
+                            "timer-menu__check",
+                            s.id === activeSession.id
+                              ? "opacity-100"
+                              : "opacity-0",
+                          )}
+                          size={13}
+                        />
+                        <span>{s.name}</span>
+                      </button>
+                    )}
+                    {renamingId !== s.id &&
+                      (confirmDeleteId === s.id ? (
+                        <div className="timer-menu__confirm">
                           <button
                             type="button"
-                            onClick={() => setConfirmDeleteId(s.id)}
-                            className="rounded p-0.5 text-muted-foreground hover:text-destructive"
-                            title="Delete"
+                            onClick={() => {
+                              onDeleteSession(s.id);
+                              setConfirmDeleteId(null);
+                              if (s.id === activeSession.id)
+                                setSessionOpen(false);
+                            }}
+                            className="is-destructive"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            Delete
                           </button>
-                        )}
-                      </div>
-                    ))}
-                </li>
-              ))}
-            </ul>
-            <div className="border-t border-border px-2 py-1">
-              <button
-                type="button"
-                onClick={() => {
-                  onCreateSession();
-                  setSessionOpen(false);
-                }}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Plus className="h-3 w-3" />
-                New session
-              </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="timer-menu__row-actions">
+                          <button
+                            type="button"
+                            onClick={() => startRename(s)}
+                            title="Rename"
+                            aria-label={`Rename ${s.name}`}
+                          >
+                            <Pencil size={13} />
+                          </button>
+                          {sessions.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(s.id)}
+                              title="Delete"
+                              aria-label={`Delete ${s.name}`}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                  </li>
+                ))}
+              </ul>
+              <div className="timer-menu__footer">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onCreateSession();
+                    setSessionOpen(false);
+                  }}
+                  className="timer-menu__item"
+                >
+                  <Plus size={14} />
+                  New session
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div className="flex-1" />
-
-      {importSlot}
-
-      {/* Settings */}
-      <button
-        type="button"
-        onClick={onOpenSettings}
-        className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-        title="Timer settings"
-      >
-        <Settings className="h-4 w-4" />
-      </button>
-    </div>
+      <div className="timer-topbar__actions">
+        {importSlot}
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          className="timer-icon-button"
+          title="Timer settings"
+          aria-label="Timer settings"
+        >
+          <SlidersHorizontal size={17} />
+        </button>
+      </div>
+    </header>
   );
 }

@@ -136,11 +136,7 @@ function ProfileTab({
     setNameMsg(null);
     const result = await updateUserProfile({
       display_name: displayNameValue,
-      method: (profile?.method ?? "unknown") as
-        | "cfop"
-        | "roux"
-        | "beginner"
-        | "unknown",
+      method: (profile?.method ?? "unknown") as "cfop" | "beginner" | "unknown",
       primary_goal: profile?.primary_goal ?? GOAL_OPTIONS[0],
     });
     setNameSaving(false);
@@ -158,7 +154,7 @@ function ProfileTab({
     setSaving(true);
     setSaveMsg(null);
     const result = await updateUserProfile({
-      method: method as "cfop" | "roux" | "beginner" | "unknown",
+      method: method as "cfop" | "beginner" | "unknown",
       primary_goal: goal,
     });
     setSaving(false);

@@ -7,19 +7,25 @@ import { VideoUploader } from "~/components/analysis/VideoUploader";
 interface Props {
   userId: string;
   initialMethod: "cfop" | "beginner";
-  usedThisMonth: number;
-  usageLimit: number;
 }
 
-const TIPS = [
+const TIPS: Array<{
+  label: string;
+  color: string;
+  angles?: string[];
+  angleNote?: string;
+  items: string[];
+}> = [
   {
-    label: "Best setup",
+    label: "Best Setup",
     color: "var(--green)",
+    angleNote: "Set the camera so the cube and hands are clearly visible.",
+    angles: ["face-on", "POV", "diagonal"],
     items: [
-      "Mount your phone directly above the cube (top-down, 30–50 cm away) so the full cube face and both hands are always visible.",
-      "Use a plain, contrasting surface — white or dark mat works best against the stickers.",
+      "Position the cube in the blue box",
+      "Use a plain, contrasting surface to solve on.",
       "Film in good, even lighting with no harsh shadows across the cube face.",
-      "Keep the camera completely still — tape it to a shelf, use a phone stand, or rest it on a stack of books.",
+      "Keep the camera completely still",
     ],
   },
   {
@@ -27,31 +33,31 @@ const TIPS = [
     color: "var(--yellow)",
     items: [
       "Film from a 45° angle slightly above eye level. Make sure all layers are partially visible.",
-      "Film from the front at eye level — the AI can still detect move execution, though it may miss top-layer details.",
-      "Avoid filming from below or the side — sticker colours become ambiguous and phase detection degrades.",
+      "Film from the front at eye level (may miss top-layer details)",
+      "Avoid filming from below or the side (sticker colours become ambiguous)",
     ],
   },
   {
     label: "Avoid",
     color: "var(--red)",
     items: [
-      "Don't cover the cube with your palms mid-solve — rotate with fingers on the sides.",
-      "Don't film in direct sunlight — reflections on stickers confuse colour detection.",
-      "Don't cut off your hands at the edges — the full hand movement needs to be visible for fingertrick analysis.",
+      "Don't cover the cube with your palms mid-solve (Hold the sides and rotate using your fingers)",
+      "Don't film in direct sunlight",
+      "Don't cut off your hands at the edges of the camera frame",
     ],
   },
 ];
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
 };
 
 const sectionLabel: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-  fontSize: "9px",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
+  fontSize: "11px",
   fontWeight: 700,
   letterSpacing: "2.5px",
   textTransform: "uppercase",
@@ -60,8 +66,8 @@ const sectionLabel: React.CSSProperties = {
 };
 
 const fieldLabel: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-  fontSize: "10px",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
+  fontSize: "12px",
   fontWeight: 600,
   letterSpacing: "2px",
   textTransform: "uppercase",
@@ -88,8 +94,8 @@ function StepIndicator({
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
-    fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-    fontSize: "11px",
+    fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
+    fontSize: "13px",
     fontWeight: 600,
     ...(state === "active"
       ? { background: "var(--blue)", color: "#01111f" }
@@ -118,7 +124,7 @@ function StepIndicator({
       <span
         style={{
           ...sans,
-          fontSize: "12px",
+          fontSize: "14px",
           fontWeight: 500,
           color:
             state === "active"
@@ -134,17 +140,10 @@ function StepIndicator({
   );
 }
 
-export function AnalysisUploadClient({
-  userId,
-  initialMethod,
-  usedThisMonth,
-  usageLimit,
-}: Props) {
+export function AnalysisUploadClient({ userId, initialMethod }: Props) {
   const [method, setMethod] = useState<"cfop" | "beginner">(initialMethod);
   const [scramble, setScramble] = useState("");
   const [tipsOpen, setTipsOpen] = useState(true);
-
-  const canUpload = usedThisMonth < usageLimit;
 
   return (
     <div>
@@ -153,7 +152,7 @@ export function AnalysisUploadClient({
         <p
           style={{
             ...mono,
-            fontSize: "10px",
+            fontSize: "12px",
             fontWeight: 600,
             letterSpacing: "2px",
             textTransform: "uppercase",
@@ -166,7 +165,7 @@ export function AnalysisUploadClient({
         <h1
           style={{
             ...sans,
-            fontSize: "28px",
+            fontSize: "34px",
             fontWeight: 700,
             letterSpacing: "-0.8px",
             lineHeight: 1.1,
@@ -179,7 +178,7 @@ export function AnalysisUploadClient({
         <p
           style={{
             ...sans,
-            fontSize: "13.5px",
+            fontSize: "16px",
             color: "var(--t2)",
             lineHeight: 1.5,
           }}
@@ -280,7 +279,7 @@ export function AnalysisUploadClient({
                   borderRadius: "10px",
                   padding: "11px 16px",
                   ...mono,
-                  fontSize: "12px",
+                  fontSize: "14px",
                   color: "var(--t2)",
                   outline: "none",
                   boxSizing: "border-box",
@@ -296,7 +295,7 @@ export function AnalysisUploadClient({
               <p
                 style={{
                   ...sans,
-                  fontSize: "11px",
+                  fontSize: "13px",
                   color: "var(--t3)",
                   marginTop: "6px",
                 }}
@@ -311,12 +310,7 @@ export function AnalysisUploadClient({
       {/* Step 2 — Upload video */}
       <div style={{ marginBottom: "28px" }}>
         <p style={sectionLabel}>Step 2 — Upload video</p>
-        <VideoUploader
-          userId={userId}
-          method={method}
-          canUpload={canUpload}
-          scramble={scramble}
-        />
+        <VideoUploader userId={userId} method={method} scramble={scramble} />
       </div>
 
       {/* Filming tips */}
@@ -337,7 +331,7 @@ export function AnalysisUploadClient({
             <span
               style={{
                 ...sans,
-                fontSize: "13px",
+                fontSize: "16px",
                 fontWeight: 500,
                 color: "var(--t2)",
               }}
@@ -358,70 +352,238 @@ export function AnalysisUploadClient({
         </button>
 
         {tipsOpen && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: "10px",
-              marginTop: "10px",
-            }}
-          >
-            {TIPS.map((group) => (
+          <div style={{ marginTop: "10px" }}>
+            {/* Camera Position Guide Card */}
+            <div
+              style={{
+                background: "#12141f",
+                border: "0.5px solid #2d3148",
+                borderRadius: "10px",
+                overflow: "hidden",
+                marginBottom: "16px",
+              }}
+            >
+              {/* Header */}
               <div
-                key={group.label}
                 style={{
-                  background: "var(--s1)",
-                  border: "0.5px solid var(--b2)",
-                  borderRadius: "10px",
-                  padding: "14px",
+                  padding: "12px 16px",
+                  borderBottom: "0.5px solid #2d3148",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
                 }}
               >
-                <p
-                  style={{
-                    ...mono,
-                    fontSize: "9px",
-                    fontWeight: 700,
-                    letterSpacing: "2px",
-                    textTransform: "uppercase",
-                    color: group.color,
-                    marginBottom: "10px",
-                  }}
-                >
-                  {group.label}
-                </p>
-                {group.items.map((tip) => (
+                <div>
                   <div
-                    key={tip}
                     style={{
                       display: "flex",
-                      gap: "7px",
-                      marginBottom: "8px",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "5px",
                     }}
                   >
-                    <div
+                    <p
                       style={{
-                        width: "4px",
-                        height: "4px",
-                        borderRadius: "50%",
-                        background: group.color,
-                        flexShrink: 0,
-                        marginTop: "6px",
-                      }}
-                    />
-                    <span
-                      style={{
-                        ...sans,
+                        ...mono,
                         fontSize: "12px",
-                        color: "var(--t2)",
-                        lineHeight: 1.6,
+                        fontWeight: 600,
+                        letterSpacing: "0.07em",
+                        textTransform: "uppercase",
+                        color: "#60efb0",
                       }}
                     >
-                      {tip}
+                      Camera Position Guide
+                    </p>
+                    <span
+                      style={{
+                        ...mono,
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        color: "#60efb0",
+                        background: "rgba(96,239,176,0.1)",
+                        border: "0.5px solid rgba(96,239,176,0.3)",
+                        borderRadius: "5px",
+                        padding: "2px 7px",
+                      }}
+                    >
+                      face-on
                     </span>
                   </div>
-                ))}
+                  <p
+                    style={{
+                      ...sans,
+                      fontSize: "13px",
+                      color: "#6b7280",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Keep the cube centered in the lower-middle of the frame,
+                    with both hands fully visible.
+                  </p>
+                </div>
               </div>
-            ))}
+              {/* Image area */}
+              <div
+                style={{
+                  background: "#0d0f1a",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "20px",
+                }}
+              >
+                <div
+                  style={{
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    boxShadow:
+                      "0 24px 64px rgba(0,0,0,0.7), 0 8px 24px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.35), 0 0 0 0.5px rgba(255,255,255,0.06)",
+                    display: "block",
+                    maxWidth: "480px",
+                    width: "100%",
+                  }}
+                >
+                  {/* biome-ignore lint/performance/noImgElement: static illustration, no dynamic sizing needed */}
+                  <img
+                    src="/camera-position-face-on.png"
+                    alt="Face-on camera position — keep the cube centered in the lower-middle of the frame"
+                    style={{
+                      width: "100%",
+                      display: "block",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Tip columns */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: "10px",
+              }}
+            >
+              {TIPS.map((group) => (
+                <div
+                  key={group.label}
+                  style={{
+                    background: "var(--s1)",
+                    border: "0.5px solid var(--b2)",
+                    borderRadius: "10px",
+                    padding: "16px",
+                  }}
+                >
+                  <p
+                    style={{
+                      ...mono,
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      letterSpacing: "2px",
+                      textTransform: "uppercase",
+                      color: group.color,
+                      marginBottom: "14px",
+                    }}
+                  >
+                    {group.label}
+                  </p>
+                  {group.angles && (
+                    <div
+                      style={{
+                        marginBottom: "16px",
+                        paddingBottom: "16px",
+                        borderBottom: "0.5px solid var(--b2)",
+                      }}
+                    >
+                      <p
+                        style={{
+                          ...sans,
+                          fontSize: "15px",
+                          color: "var(--t1)",
+                          marginBottom: "12px",
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {group.angleNote}
+                      </p>
+                      <p
+                        style={{
+                          ...mono,
+                          fontSize: "10px",
+                          fontWeight: 700,
+                          letterSpacing: "1.5px",
+                          textTransform: "uppercase",
+                          color: group.color,
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Recommended angles
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "6px",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {group.angles.map((angle) => (
+                          <span
+                            key={angle}
+                            style={{
+                              ...mono,
+                              fontSize: "13px",
+                              fontWeight: 600,
+                              color: group.color,
+                              background:
+                                "color-mix(in oklch, var(--green) 12%, transparent)",
+                              border: `0.5px solid color-mix(in oklch, var(--green) 35%, transparent)`,
+                              borderRadius: "5px",
+                              padding: "4px 10px",
+                            }}
+                          >
+                            {angle}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {group.items.map((tip) => (
+                    <div
+                      key={tip}
+                      style={{
+                        display: "flex",
+                        gap: "9px",
+                        marginBottom: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "5px",
+                          height: "5px",
+                          borderRadius: "50%",
+                          background: group.color,
+                          flexShrink: 0,
+                          marginTop: "9px",
+                        }}
+                      />
+                      <span
+                        style={{
+                          ...sans,
+                          fontSize: "15px",
+                          color: "var(--t2)",
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {tip}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

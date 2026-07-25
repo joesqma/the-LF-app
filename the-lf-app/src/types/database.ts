@@ -17,7 +17,7 @@ export type Database = {
           wca_id: string | null;
           wca_data: Json | null;
           wca_last_fetched: string | null;
-          method: "cfop" | "roux" | "beginner" | "unknown" | null;
+          method: "cfop" | "beginner" | "unknown" | null;
           current_average: string | null;
           primary_goal: string | null;
           cfop_level:
@@ -52,7 +52,7 @@ export type Database = {
           wca_id?: string | null;
           wca_data?: Json | null;
           wca_last_fetched?: string | null;
-          method?: "cfop" | "roux" | "beginner" | "unknown" | null;
+          method?: "cfop" | "beginner" | "unknown" | null;
           current_average?: string | null;
           primary_goal?: string | null;
           cfop_level?:
@@ -87,7 +87,7 @@ export type Database = {
           wca_id?: string | null;
           wca_data?: Json | null;
           wca_last_fetched?: string | null;
-          method?: "cfop" | "roux" | "beginner" | "unknown" | null;
+          method?: "cfop" | "beginner" | "unknown" | null;
           current_average?: string | null;
           primary_goal?: string | null;
           cfop_level?:
@@ -205,7 +205,7 @@ export type Database = {
           id: string;
           user_id: string;
           video_path: string | null;
-          method: "cfop" | "roux" | "beginner" | null;
+          method: "cfop" | "beginner" | null;
           scramble: string | null;
           status: "pending" | "processing" | "complete" | "failed";
           report: Json | null;
@@ -215,7 +215,7 @@ export type Database = {
           id?: string;
           user_id: string;
           video_path?: string | null;
-          method?: "cfop" | "roux" | "beginner" | null;
+          method?: "cfop" | "beginner" | null;
           scramble?: string | null;
           status?: "pending" | "processing" | "complete" | "failed";
           report?: Json | null;
@@ -225,7 +225,7 @@ export type Database = {
           id?: string;
           user_id?: string;
           video_path?: string | null;
-          method?: "cfop" | "roux" | "beginner" | null;
+          method?: "cfop" | "beginner" | null;
           scramble?: string | null;
           status?: "pending" | "processing" | "complete" | "failed";
           report?: Json | null;

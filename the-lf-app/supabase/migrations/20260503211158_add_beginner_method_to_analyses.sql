@@ -16,4 +16,4 @@ end $$;
 
 alter table public.analyses
   add constraint analyses_method_check
-  check (method in ('cfop', 'roux', 'beginner'));
+  check (method in ('cfop', 'beginner'));

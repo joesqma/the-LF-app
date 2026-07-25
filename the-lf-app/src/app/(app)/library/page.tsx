@@ -1,3 +1,4 @@
+import { Bookmark, ScanSearch, Shuffle } from "lucide-react";
 import { redirect } from "next/navigation";
 import { LibraryClient } from "~/components/library/LibraryClient";
 import { createClient } from "~/lib/supabase/server";
@@ -35,60 +36,32 @@ export default async function LibraryPage() {
   const bookmarks = bookmarkData ?? [];
   const scrambles = scrambleData ?? [];
 
+  const totals = [
+    { label: "Analyses", value: analyses.length, Icon: ScanSearch },
+    { label: "Videos", value: bookmarks.length, Icon: Bookmark },
+    { label: "Scrambles", value: scrambles.length, Icon: Shuffle },
+  ];
+
   return (
-    <div
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        background: "var(--bg-base)",
-        overflow: "hidden",
-      }}
-    >
-      {/* Page header */}
-      <div
-        style={{
-          padding: "48px 56px 40px",
-          borderBottom: "1px solid var(--border)",
-          flexShrink: 0,
-        }}
-      >
-        <p
-          className="font-dm-sans"
-          style={{
-            fontSize: "11px",
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            color: "var(--text-dimmer)",
-            marginBottom: "8px",
-          }}
-        >
-          Library
-        </p>
-        <h1
-          className="font-syne"
-          style={{
-            fontSize: "32px",
-            fontWeight: 800,
-            letterSpacing: "-0.025em",
-            color: "var(--text-primary)",
-            marginBottom: "4px",
-          }}
-        >
-          Your collection.
-        </h1>
-        <p
-          className="font-dm-sans"
-          style={{
-            fontSize: "13px",
-            fontWeight: 300,
-            color: "var(--text-dim)",
-          }}
-        >
-          Analyses, saved videos, and scrambles — all in one place.
-        </p>
-      </div>
+    <div className="library-page">
+      <header className="library-hero">
+        <div className="library-hero__copy">
+          <span className="library-eyebrow">Library</span>
+          <h1>Keep what moves you forward.</h1>
+          <p>
+            Your analyses, saved lessons, and useful scrambles in one place.
+          </p>
+        </div>
+        <section className="library-totals" aria-label="Library totals">
+          {totals.map(({ label, value, Icon }) => (
+            <div key={label} className="library-total">
+              <Icon size={16} />
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
+          ))}
+        </section>
+      </header>
 
       <LibraryClient
         analyses={analyses}

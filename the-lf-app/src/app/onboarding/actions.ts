@@ -7,7 +7,7 @@ import type { Database } from "~/types/database";
 
 type ProfileUpsert = Database["public"]["Tables"]["user_profiles"]["Insert"];
 
-type Method = "cfop" | "roux" | "beginner" | "unknown";
+type Method = "cfop" | "beginner" | "unknown";
 type CfopLevel = "none" | "2look_oll" | "2look_both" | "full_ollpll";
 type ColorNeutrality =
   | "white_yellow"
@@ -17,7 +17,6 @@ type ColorNeutrality =
 
 const METHOD_MAP: Record<string, Method> = {
   CFOP: "cfop",
-  Roux: "roux",
   "Beginner method": "beginner",
   "I don't know": "unknown",
 };

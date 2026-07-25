@@ -1,6 +1,6 @@
 "use client";
 
-import { Bookmark, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bookmark } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CubeNet } from "~/components/timer/CubeNet";
 import { CubeNet2x2 } from "~/components/timer/CubeNet2x2";
@@ -151,6 +151,15 @@ const PHASE_COLOR: Record<TimerPhase, string> = {
   ready: "text-green-400 dark:text-green-400",
   running: "text-foreground",
   inspecting: "text-foreground",
+};
+
+const PHASE_LABEL: Record<TimerPhase, string> = {
+  idle: "Ready",
+  holding: "Hold",
+  ready: "Release",
+  inspecting: "Inspection",
+  running: "Timing",
+  done: "Last solve",
 };
 
 // ── component ─────────────────────────────────────────────────────────────────
@@ -602,24 +611,10 @@ export default function TimerPage() {
     <div
       role="application"
       aria-label="Speedcubing timer"
-      className="flex h-full flex-col overflow-hidden"
+      className="timer-page"
       onContextMenu={(e) => e.preventDefault()}
-      onTouchStart={(e) => {
-        e.preventDefault();
-        if ((e.target as HTMLElement).tagName !== "INPUT") handleDown();
-      }}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        if ((e.target as HTMLElement).tagName !== "INPUT") handleUp();
-      }}
     >
-      {/* Top bar — fades out when timer is running/inspecting */}
-      <div
-        className={cn(
-          "transition-opacity duration-150",
-          focusMode && "opacity-0 pointer-events-none",
-        )}
-      >
+      <div className={cn("timer-page__chrome", focusMode && "is-hidden")}>
         <TimerTopBar
           activePuzzle={activePuzzle}
           activeSession={
@@ -644,15 +639,79 @@ export default function TimerPage() {
         />
       </div>
 
-      {/* Body: center + right panel */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Timer center */}
-        <div className="relative flex flex-1 select-none flex-col touch-none">
-          {/* Timer display — absolute so it stays perfectly centered regardless of what fades around it */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
+      <div className={cn("timer-workspace", focusMode && "is-focus")}>
+        <main
+          className={cn("timer-stage", `timer-stage--${phase}`)}
+          onTouchStart={(e) => {
+            if ((e.target as HTMLElement).closest("button, input")) return;
+            e.preventDefault();
+            handleDown();
+          }}
+          onTouchEnd={(e) => {
+            if ((e.target as HTMLElement).closest("button, input")) return;
+            e.preventDefault();
+            handleUp();
+          }}
+        >
+          <section
+            className={cn("timer-scramble", focusMode && "is-hidden")}
+            aria-label="Current scramble"
+          >
+            <div className="timer-scramble__heading">
+              <span>Scramble</span>
+              <div className="timer-scramble__actions">
+                <button
+                  type="button"
+                  onClick={prevScramble}
+                  disabled={scrambleHistory.length === 0}
+                  className="timer-icon-button"
+                  title="Previous scramble"
+                  aria-label="Previous scramble"
+                >
+                  <ArrowLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveScramble}
+                  disabled={!user || scrambleSaved}
+                  className={cn(
+                    "timer-icon-button",
+                    scrambleSaved && "is-saved",
+                  )}
+                  title={
+                    scrambleSaved
+                      ? "Saved to library"
+                      : "Save scramble to library"
+                  }
+                  aria-label={
+                    scrambleSaved
+                      ? "Saved to library"
+                      : "Save scramble to library"
+                  }
+                >
+                  <Bookmark
+                    size={16}
+                    fill={scrambleSaved ? "currentColor" : "none"}
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => nextScramble()}
+                  className="timer-icon-button"
+                  title="Next scramble"
+                  aria-label="Next scramble"
+                >
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+            <code>{scramble}</code>
+          </section>
+
+          <div className="timer-stage__display">
+            <span className="timer-stage__phase">{PHASE_LABEL[phase]}</span>
             {settings.inputMethod === "typing" ? (
-              /* Type-in mode */
-              <div className="flex flex-col items-center gap-4">
+              <div className="timer-type-entry">
                 <input
                   ref={typeInInputRef}
                   type="text"
@@ -663,13 +722,13 @@ export default function TimerPage() {
                     if (e.key === "Escape") setTypeInValue("");
                   }}
                   placeholder="1220 or 12.34"
-                  className="w-48 rounded-lg border border-border bg-transparent px-4 py-2 text-center font-mono text-2xl text-foreground outline-none focus:border-ring focus:ring-2 focus:ring-ring/20"
+                  className="timer-type-entry__input"
                 />
                 {typeInValue &&
                   (() => {
                     const preview = parseTypeInTime(typeInValue);
                     return (
-                      <span className="font-mono text-sm text-muted-foreground">
+                      <span className="timer-type-entry__preview">
                         {preview !== null ? fmtSecs(preview) : "invalid"}
                       </span>
                     );
@@ -677,121 +736,46 @@ export default function TimerPage() {
                 <button
                   type="button"
                   onClick={handleTypeIn}
-                  className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                  className="timer-type-entry__save"
                 >
-                  Save
+                  Save time
                 </button>
               </div>
             ) : phase === "inspecting" ? (
-              /* Inspection countdown */
               <div
                 className={cn(
-                  "font-mono font-light tabular-nums leading-none tracking-tight",
-                  "text-[80px]",
+                  "timer-display__value",
                   inspectionRemaining > 3
                     ? "text-foreground"
                     : "text-red-400 dark:text-red-400",
                 )}
-                style={{ letterSpacing: "-3px" }}
               >
                 {Math.ceil(inspectionRemaining)}
               </div>
             ) : (
-              /* Spacebar mode */
-              <div
-                className={cn(
-                  "font-mono font-light tabular-nums leading-none tracking-tight transition-colors duration-75",
-                  "text-[80px]",
-                  PHASE_COLOR[phase],
-                )}
-                style={{ letterSpacing: "-3px" }}
-              >
+              <div className={cn("timer-display__value", PHASE_COLOR[phase])}>
                 {fmtSecs(displaySecs)}
               </div>
             )}
           </div>
 
-          {/* Scramble bar — fades out when running/inspecting */}
-          <div
-            className={cn(
-              "relative z-10 flex flex-col items-center justify-center gap-2 bg-background px-6 py-3 transition-opacity duration-150",
-              focusMode && "opacity-0 pointer-events-none",
-            )}
-          >
-            <p className="max-w-4xl whitespace-pre-wrap text-center font-mono text-base leading-relaxed tracking-wide text-foreground sm:text-lg">
-              {scramble}
-            </p>
-            <div className="flex shrink-0 items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={prevScramble}
-                disabled={scrambleHistory.length === 0}
-                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-30"
-                title="Previous scramble"
-              >
-                <RefreshCw className="h-3.5 w-3.5 -scale-x-100" />
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveScramble}
-                disabled={!user || scrambleSaved}
-                className={cn(
-                  "rounded-md p-1 transition-colors disabled:opacity-30",
-                  scrambleSaved
-                    ? "text-orange-400"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                )}
-                title={
-                  scrambleSaved
-                    ? "Saved to library"
-                    : "Save scramble to library"
-                }
-              >
-                <Bookmark
-                  className={cn("h-3.5 w-3.5", scrambleSaved && "fill-current")}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => nextScramble()}
-                className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                title="Next scramble"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Cube net — hidden when running/inspecting */}
           {settings.showCubeNet && !focusMode && (
-            <div className="absolute bottom-4 right-4">
-              <div
-                className={cn(
-                  "rounded-xl border border-border bg-card p-3 shadow-[8px_8px_0px_hsl(var(--border))]",
-                  activePuzzle === "2×2"
-                    ? "h-[160px] w-[200px]"
-                    : "h-[220px] w-[300px]",
-                )}
-              >
-                <div className="flex h-full w-full items-center justify-center overflow-hidden">
-                  {activePuzzle === "2×2" ? (
-                    <CubeNet2x2 scramble={scramble} scale={1.2} />
-                  ) : (
-                    <CubeNet scramble={scramble} scale={1.2} />
-                  )}
-                </div>
-              </div>
+            <div
+              className={cn(
+                "timer-cube-preview",
+                activePuzzle === "2×2" && "timer-cube-preview--compact",
+              )}
+            >
+              {activePuzzle === "2×2" ? (
+                <CubeNet2x2 scramble={scramble} scale={1.2} />
+              ) : (
+                <CubeNet scramble={scramble} scale={1.2} />
+              )}
             </div>
           )}
-        </div>
+        </main>
 
-        {/* Session panel — fades out when running/inspecting */}
-        <div
-          className={cn(
-            "transition-opacity duration-150",
-            focusMode && "opacity-0 pointer-events-none",
-          )}
-        >
+        <div className={cn("timer-session-wrap", focusMode && "is-hidden")}>
           {activeSession && (
             <SessionPanel
               sessionName={activeSession.name}
@@ -803,7 +787,6 @@ export default function TimerPage() {
         </div>
       </div>
 
-      {/* Settings modal */}
       {settingsOpen && (
         <TimerSettingsPanel
           settings={settings}

@@ -5,8 +5,6 @@ import { AnalysisUploadClient } from "~/components/analysis/AnalysisUploadClient
 import { createClient } from "~/lib/supabase/server";
 import type { AnalysisReport } from "~/types/analysis";
 
-const FREE_MONTHLY_LIMIT = 3;
-
 const FEATURES = [
   {
     Icon: Search,
@@ -77,7 +75,7 @@ function fmtTime(raw: string | undefined): string {
 }
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
@@ -90,14 +88,7 @@ export default async function AnalysisPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const now = new Date();
-  const startOfMonth = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    1,
-  ).toISOString();
-
-  const [profileResult, recentResult, usageResult] = await Promise.all([
+  const [profileResult, recentResult] = await Promise.all([
     supabase.from("user_profiles").select("method").eq("id", user.id).single(),
     supabase
       .from("analyses")
@@ -106,23 +97,12 @@ export default async function AnalysisPage() {
       .eq("status", "complete")
       .order("created_at", { ascending: false })
       .limit(3),
-    supabase
-      .from("analyses")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .gte("created_at", startOfMonth),
   ]);
 
   const profileMethod = profileResult.data?.method;
   const method: "cfop" | "beginner" =
     profileMethod === "beginner" ? "beginner" : "cfop";
   const recentAnalyses = recentResult.data ?? [];
-  const usedThisMonth = usageResult.count ?? 0;
-  const remaining = Math.max(0, FREE_MONTHLY_LIMIT - usedThisMonth);
-  const quotaPct = Math.min(
-    100,
-    Math.round((usedThisMonth / FREE_MONTHLY_LIMIT) * 100),
-  );
 
   return (
     <div
@@ -139,12 +119,7 @@ export default async function AnalysisPage() {
           borderRight: "0.5px solid var(--b1)",
         }}
       >
-        <AnalysisUploadClient
-          userId={user.id}
-          initialMethod={method}
-          usedThisMonth={usedThisMonth}
-          usageLimit={FREE_MONTHLY_LIMIT}
-        />
+        <AnalysisUploadClient userId={user.id} initialMethod={method} />
       </div>
 
       {/* Aside */}
@@ -283,67 +258,6 @@ export default async function AnalysisPage() {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Quota */}
-        <div
-          style={{
-            background: "var(--s1)",
-            border: "0.5px solid var(--b2)",
-            borderRadius: "12px",
-            padding: "14px 16px",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              justifyContent: "space-between",
-              marginBottom: "8px",
-            }}
-          >
-            <span style={{ ...sans, fontSize: "12px", color: "var(--t2)" }}>
-              Analyses this month
-            </span>
-            <span
-              style={{
-                ...mono,
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "var(--yellow)",
-              }}
-            >
-              {usedThisMonth} / {FREE_MONTHLY_LIMIT}
-            </span>
-          </div>
-          <div
-            style={{
-              height: "4px",
-              background: "var(--s2)",
-              borderRadius: "2px",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                height: "100%",
-                background: "var(--yellow)",
-                borderRadius: "2px",
-                width: `${quotaPct}%`,
-              }}
-            />
-          </div>
-          <p
-            style={{
-              ...sans,
-              fontSize: "11px",
-              color: "var(--t3)",
-              marginTop: "6px",
-            }}
-          >
-            {remaining} {remaining === 1 ? "analysis" : "analyses"} remaining.
-            Upgrade for unlimited.
-          </p>
         </div>
 
         {/* Recent analyses */}

@@ -19,16 +19,31 @@ function normalizePhases(phases: AnalysisPhase[]): AnalysisPhase[] {
   const f2lPairs = phases.filter((p) => /^f2l pair \d+$/i.test(p.name));
   if (f2lPairs.length === 0) return phases;
 
+  const tsStart = f2lPairs[0]?.timestamp_start ?? "";
+  const tsEnd = f2lPairs[f2lPairs.length - 1]?.timestamp_end ?? "";
+  const mergedMoves = f2lPairs.every((p) => p.move_sequence !== null)
+    ? f2lPairs.flatMap((p) => p.move_sequence ?? [])
+    : null;
+  const mergedCount = mergedMoves?.length ?? null;
+  const duration = parseTimestamp(tsEnd) - parseTimestamp(tsStart);
+  const mergedTps =
+    mergedCount !== null && duration > 0
+      ? Math.round((mergedCount / duration) * 100) / 100
+      : null;
+
   const merged: AnalysisPhase = {
     name: "F2L",
-    timestamp_start: f2lPairs[0]?.timestamp_start ?? "",
-    timestamp_end: f2lPairs[f2lPairs.length - 1]?.timestamp_end ?? "",
+    timestamp_start: tsStart,
+    timestamp_end: tsEnd,
     algorithm_identified: null,
     observations: f2lPairs.map((p) => p.observations).join(" "),
     recommendation: f2lPairs
       .map((p) => p.recommendation)
       .filter((r, i, arr) => arr.indexOf(r) === i)
       .join(" "),
+    move_sequence: mergedMoves,
+    move_count: mergedCount,
+    tps: mergedTps,
   };
 
   const insertIdx = phases.findIndex((p) => /^f2l pair \d+$/i.test(p.name));
@@ -62,7 +77,7 @@ interface Props {
 }
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
@@ -193,20 +208,43 @@ export function PhaseBreakdown({ phases, onSeek }: Props) {
                   )}
                 </div>
 
-                {/* Algorithm */}
-                {phase.algorithm_identified && (
-                  <span
-                    style={{
-                      ...mono,
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      color: "var(--orange)",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {phase.algorithm_identified}
-                  </span>
-                )}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    flexShrink: 0,
+                  }}
+                >
+                  {/* Move count + TPS */}
+                  {phase.move_count !== null && (
+                    <span
+                      style={{
+                        ...mono,
+                        fontSize: "10px",
+                        fontWeight: 500,
+                        color: "var(--t3)",
+                      }}
+                    >
+                      {phase.move_count} moves
+                      {phase.tps !== null && ` · ${phase.tps} TPS`}
+                    </span>
+                  )}
+
+                  {/* Algorithm */}
+                  {phase.algorithm_identified && (
+                    <span
+                      style={{
+                        ...mono,
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        color: "var(--orange)",
+                      }}
+                    >
+                      {phase.algorithm_identified}
+                    </span>
+                  )}
+                </div>
               </button>
 
               {/* Expanded content */}
@@ -221,6 +259,51 @@ export function PhaseBreakdown({ phases, onSeek }: Props) {
                     gap: "12px",
                   }}
                 >
+                  {/* Move sequence */}
+                  {phase.move_sequence && phase.move_sequence.length > 0 && (
+                    <div>
+                      <p
+                        style={{
+                          ...mono,
+                          fontSize: "9px",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "2px",
+                          color: "var(--t3)",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        Move sequence
+                      </p>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: "4px",
+                        }}
+                      >
+                        {phase.move_sequence.map((move, i) => (
+                          <span
+                            // biome-ignore lint/suspicious/noArrayIndexKey: move list is positional
+                            key={i}
+                            style={{
+                              ...mono,
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              color: "var(--t1)",
+                              background: "var(--s1)",
+                              border: "0.5px solid var(--b2)",
+                              borderRadius: "6px",
+                              padding: "2px 7px",
+                            }}
+                          >
+                            {move}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <p
                       style={{

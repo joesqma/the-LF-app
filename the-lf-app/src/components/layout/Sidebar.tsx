@@ -5,11 +5,14 @@ import {
   BarChart2,
   Bookmark,
   BookOpen,
+  ChevronRight,
   LayoutDashboard,
+  Menu,
   Settings,
   Timer,
   User,
   Video,
+  X,
   Zap,
 } from "lucide-react";
 import Image from "next/image";
@@ -63,6 +66,7 @@ function getInitials(name: string): string {
 export function Sidebar() {
   const pathname = usePathname();
   const { hidden } = useSidebar();
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [profile, setProfile] = useState<{
     name: string;
     email: string;
@@ -84,184 +88,94 @@ export function Sidebar() {
     });
   }, []);
 
+  if (hidden) return null;
+
   return (
-    <aside
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "220px",
-        height: "100vh",
-        background: "var(--s1)",
-        borderRight: "0.5px solid var(--b1)",
-        zIndex: 100,
-        display: hidden ? "none" : "flex",
-        flexDirection: "column",
-      }}
-    >
-      {/* Logo */}
-      <div
-        style={{
-          padding: "20px 16px 12px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          flexShrink: 0,
-        }}
-      >
-        <Image
-          src="/icon.png"
-          alt="Cubewise"
-          width={32}
-          height={32}
-          style={{ objectFit: "contain" }}
+    <>
+      <header className="mobile-app-bar">
+        <Link href="/dashboard" className="app-brand">
+          <Image src="/icon.png" alt="" width={34} height={34} />
+          <span>Cubewise</span>
+        </Link>
+        <button
+          type="button"
+          className="mobile-menu-button"
+          aria-label={mobileOpen ? "Close navigation" : "Open navigation"}
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((open) => !open)}
+        >
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </header>
+
+      {mobileOpen && (
+        <button
+          type="button"
+          className="sidebar-scrim"
+          aria-label="Close navigation"
+          onClick={() => setMobileOpen(false)}
         />
-        <span
-          style={{
-            fontFamily: "var(--font-dm-sans), 'DM Sans', sans-serif",
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "var(--t1)",
-            letterSpacing: "0.1px",
-          }}
-        >
-          Cubewise
-        </span>
-      </div>
+      )}
 
-      {/* Nav */}
-      <nav style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
-        {NAV_GROUPS.map((group) => (
-          <div key={group.label ?? "main"}>
-            {group.label && (
-              <div
-                style={{
-                  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-                  fontSize: "9px",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "2px",
-                  color: "var(--t3)",
-                  padding: "12px 16px 4px",
-                }}
-              >
-                {group.label}
-              </div>
-            )}
-            {group.items.map(({ href, label, Icon }) => {
-              const active =
-                pathname === href ||
-                (href !== "/dashboard" && pathname.startsWith(`${href}/`));
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={active ? undefined : "cb-nav-item"}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    position: "relative",
-                    padding: "8px 14px",
-                    textDecoration: "none",
-                    fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
-                    fontSize: "14px",
-                    fontWeight: active ? 500 : 400,
-                    ...(active
-                      ? { color: "var(--blue)", background: "var(--blue-dim)" }
-                      : {}),
-                    transition: "color 150ms, background-color 150ms",
-                  }}
-                >
-                  {active && (
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: "2px",
-                        background: "var(--blue)",
-                      }}
-                    />
-                  )}
-                  <Icon size={15} strokeWidth={1.6} aria-hidden="true" />
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
+      <aside className={mobileOpen ? "app-sidebar is-open" : "app-sidebar"}>
+        <Link href="/dashboard" className="app-brand app-brand--desktop">
+          <Image src="/icon.png" alt="" width={38} height={38} />
+          <span>Cubewise</span>
+        </Link>
 
-      {/* Profile cell */}
-      <div
-        style={{
-          margin: "8px 12px 12px",
-          padding: "10px",
-          background: "var(--s2)",
-          border: "0.5px solid var(--b1)",
-          borderRadius: "10px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            width: "30px",
-            height: "30px",
-            borderRadius: "8px",
-            background: "var(--blue-dim)",
-            border: "0.5px solid var(--b3)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
+        <div className="sidebar-intro">
+          <span>Your training space</span>
+          <p>Build speed with intention.</p>
+        </div>
+
+        {/* Nav */}
+        <nav className="sidebar-nav">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.label ?? "main"} className="sidebar-nav__group">
+              {group.label && (
+                <div className="sidebar-nav__label">{group.label}</div>
+              )}
+              {group.items.map(({ href, label, Icon }) => {
+                const active =
+                  pathname === href ||
+                  (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={
+                      active ? "sidebar-link is-active" : "sidebar-link"
+                    }
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <span className="sidebar-link__icon">
+                      <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+                    </span>
+                    <span>{label}</span>
+                    <ChevronRight className="sidebar-link__arrow" size={14} />
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Profile cell */}
+        <Link
+          href="/profile"
+          className="sidebar-profile"
+          onClick={() => setMobileOpen(false)}
         >
-          <span
-            style={{
-              fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-              fontSize: "11px",
-              fontWeight: 700,
-              color: "var(--blue)",
-            }}
-          >
-            {profile ? getInitials(profile.name) : "?"}
-          </span>
-        </div>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div
-            style={{
-              fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--t1)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {profile?.name ?? "—"}
+          <div className="sidebar-profile__avatar">
+            <span>{profile ? getInitials(profile.name) : "?"}</span>
           </div>
-          <div
-            style={{
-              fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-              fontSize: "10px",
-              fontWeight: 400,
-              color: "var(--t3)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {profile?.email ?? ""}
+          <div className="sidebar-profile__copy">
+            <strong>{profile?.name ?? "Your profile"}</strong>
+            <span>{profile?.email ?? "Loading account…"}</span>
           </div>
-        </div>
-      </div>
-    </aside>
+          <ChevronRight size={15} />
+        </Link>
+      </aside>
+    </>
   );
 }

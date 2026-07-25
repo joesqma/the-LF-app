@@ -7,13 +7,6 @@ import { getRecommendedLesson } from "~/lib/recommendations";
 import { createClient } from "~/lib/supabase/server";
 import type { AnalysisReport } from "~/types/analysis";
 
-const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
-};
-const sans: React.CSSProperties = {
-  fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
-};
-
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -113,40 +106,18 @@ export default async function DashboardPage() {
     : null;
 
   return (
-    <div style={{ padding: "28px 32px 48px" }}>
+    <div className="dashboard-page">
       {/* Hero */}
-      <div style={{ marginBottom: "28px" }}>
-        <p
-          style={{
-            ...mono,
-            fontSize: "10px",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "2px",
-            color: "var(--t3)",
-            marginBottom: "8px",
-          }}
-        >
-          Overview
-        </p>
-        <h1
-          style={{
-            ...sans,
-            fontSize: "38px",
-            fontWeight: 700,
-            letterSpacing: "-1.5px",
-            lineHeight: 1.05,
-            color: "var(--t1)",
-          }}
-        >
-          Welcome back,{" "}
-          <span style={{ color: "var(--blue)" }}>{firstName}.</span>
+      <div className="dashboard-hero">
+        <p>Overview</p>
+        <h1>
+          Welcome back, <span>{firstName}.</span>
         </h1>
       </div>
 
       {/* AI Recommendation */}
       {recommended && (
-        <div style={{ marginBottom: "28px" }}>
+        <div className="dashboard-recommendation">
           <RecommendedLessonCard
             recommendation={recommended}
             dontKnowHref={dontKnowHref}
@@ -155,13 +126,13 @@ export default async function DashboardPage() {
       )}
 
       {/* Quick navigation */}
-      <div style={{ marginBottom: "28px" }}>
+      <div className="dashboard-quicknav">
         <QuickNavGrid />
       </div>
 
       {/* Quick stats */}
       {totalSolves > 0 && (
-        <div style={{ marginBottom: "28px" }}>
+        <div className="dashboard-stats">
           <QuickStatsBlock
             recentSolves={recentSolves}
             totalSolves={totalSolves}
@@ -172,7 +143,9 @@ export default async function DashboardPage() {
 
       {/* Recent analysis */}
       {recentAnalyses.length > 0 && (
-        <RecentAnalysis analyses={recentAnalyses} />
+        <div className="dashboard-recent">
+          <RecentAnalysis analyses={recentAnalyses} />
+        </div>
       )}
     </div>
   );

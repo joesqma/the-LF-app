@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnalysisSummaryCard } from "~/components/analysis/AnalysisSummaryCard";
-import { ChatPanel } from "~/components/analysis/ChatPanel";
 import { PhaseBreakdown } from "~/components/analysis/PhaseBreakdown";
 import { RecommendedLessons } from "~/components/analysis/RecommendedLessons";
 import type { AnalysisReport } from "~/types/analysis";
@@ -20,16 +19,10 @@ function formatDate(dateStr: string): string {
 interface Props {
   analysis: Analysis;
   videoUrl: string | null;
-  initialMessages: {
-    id: string;
-    role: "user" | "assistant";
-    content: string;
-  }[];
-  userTier: "free" | "premium" | "lifetime";
 }
 
 const mono: React.CSSProperties = {
-  fontFamily: "var(--font-geist-mono), 'Geist Mono', monospace",
+  fontFamily: "var(--font-roboto-mono), 'Roboto Mono', monospace",
 };
 const sans: React.CSSProperties = {
   fontFamily: "var(--font-outfit), 'Outfit', sans-serif",
@@ -49,12 +42,7 @@ function SkeletonBlock({ height }: { height: number }) {
   );
 }
 
-export function AnalysisResultClient({
-  analysis,
-  videoUrl,
-  initialMessages,
-  userTier,
-}: Props) {
+export function AnalysisResultClient({ analysis, videoUrl }: Props) {
   const [status, setStatus] = useState(analysis.status);
   const [report, setReport] = useState<AnalysisReport | null>(
     (analysis.report ?? null) as unknown as AnalysisReport | null,
@@ -311,12 +299,6 @@ export function AnalysisResultClient({
         <PhaseBreakdown phases={report.phases} onSeek={seekTo} />
 
         <RecommendedLessons lessonIds={report.recommended_lesson_ids} />
-
-        <ChatPanel
-          analysisId={analysis.id}
-          initialMessages={initialMessages}
-          userTier={userTier}
-        />
       </div>
     );
   }

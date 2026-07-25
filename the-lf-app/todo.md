@@ -148,11 +148,6 @@
 - [ ] Test: completing lesson 1 unlocks lesson 2
 - [ ] Test: progress bar on /learn updates after completion
 
-### 4C · Roux Track
-- [ ] Define all Roux lessons in `/src/lib/content/roux.ts`
-- [ ] Create `/src/app/(app)/learn/roux/page.tsx`
-- [ ] Create `/src/app/(app)/learn/roux/[lessonId]/page.tsx`
-
 ### 4D · Competition Prep Track
 - [ ] Define all Comp Prep lessons in `/src/lib/content/comp-prep.ts`
 - [ ] Create `/src/app/(app)/learn/comp-prep/page.tsx` (all lessons freely accessible, no lock)
@@ -190,7 +185,7 @@
 - [ ] Update status to `processing`
 - [ ] Download video from Supabase Storage as Buffer
 - [ ] Upload to Gemini File API, wait for ACTIVE state
-- [ ] Send structured analysis prompt (CFOP or Roux variant)
+- [ ] Send the structured analysis prompt for the selected method
 - [ ] Parse and validate JSON response (strip markdown fences)
 - [ ] Store result in `analyses.report`, set status to `complete`
 - [ ] Handle failures: set status to `failed`, log error
@@ -206,7 +201,7 @@
 - [ ] Create `PhaseBreakdown.tsx` (collapsible accordion per phase)
 - [ ] Each phase: name, timestamp, algorithm identified, observations, recommendation
 - [ ] Create `RecommendedLessons.tsx` (maps lesson IDs to lesson cards)
-- [ ] Test: all phases render for both CFOP and Roux analyses
+- [ ] Test: all phases render for every supported analysis method
 - [ ] Test: recommended lessons link to correct lesson pages
 
 ### 5E · Claude Chat
@@ -381,6 +376,5 @@
 - [ ] Mobile app (React Native or PWA)
 - [ ] AI-generated daily training plans
 - [ ] Stripe payment integration for Premium and Lifetime tiers
-- [ ] Roux-specific timer stats (move count, ETM)
 - [ ] Seasonal challenges and XP leaderboards
 - [ ] Admin dashboard for content management

@@ -33,121 +33,92 @@ export function TimerSettingsPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4">
-      <div className="w-full max-w-xs rounded-xl border border-border bg-card p-5 shadow-sm">
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-foreground">
-            Timer Settings
-          </h2>
+    <div className="timer-modal-backdrop">
+      <div className="timer-modal timer-settings-modal">
+        <div className="timer-modal__header">
+          <div>
+            <span className="timer-modal__eyebrow">Preferences</span>
+            <h2>Timer settings</h2>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="timer-modal__close"
+            aria-label="Close timer settings"
           >
-            <X className="h-4 w-4" />
+            <X size={17} />
           </button>
         </div>
 
-        <div className="space-y-5">
-          {/* Input method */}
-          <div>
-            <p className="mb-2 text-xs font-medium text-foreground">
-              Input method
-            </p>
-            <div className="flex gap-2">
+        <div className="timer-settings-list">
+          <section className="timer-settings-group">
+            <p>Input method</p>
+            <div className="timer-settings-segment">
               {(["timer", "typing"] as const).map((method) => (
                 <button
                   key={method}
                   type="button"
                   onClick={() => set("inputMethod", method)}
-                  className={cn(
-                    "h-7 flex-1 rounded-md border text-xs font-medium transition-colors",
-                    settings.inputMethod === method
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
-                  )}
+                  className={cn(settings.inputMethod === method && "is-active")}
                 >
                   {method === "timer" ? "Spacebar" : "Typing"}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* Hold threshold — only relevant for spacebar mode */}
           {settings.inputMethod === "timer" && (
-            <div>
-              <p className="mb-2 text-xs font-medium text-foreground">
-                Hold threshold
-              </p>
-              <div className="flex gap-2">
+            <section className="timer-settings-group">
+              <p>Hold threshold</p>
+              <div className="timer-settings-segment timer-settings-segment--numeric">
                 {([150, 300, 500] as const).map((ms) => (
                   <button
                     key={ms}
                     type="button"
                     onClick={() => set("holdThresholdMs", ms)}
                     className={cn(
-                      "h-7 flex-1 rounded-md border text-xs font-medium transition-colors",
-                      settings.holdThresholdMs === ms
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
+                      settings.holdThresholdMs === ms && "is-active",
                     )}
                   >
                     {ms}ms
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Inspection — only relevant for spacebar mode */}
           {settings.inputMethod === "timer" && (
-            <div>
-              <p className="mb-2 text-xs font-medium text-foreground">
-                Inspection time
-              </p>
-              <div className="flex gap-2">
+            <section className="timer-settings-group">
+              <p>Inspection time</p>
+              <div className="timer-settings-segment timer-settings-segment--numeric">
                 {([null, 8, 12, 15] as const).map((secs) => (
                   <button
                     key={String(secs)}
                     type="button"
                     onClick={() => set("inspectionSecs", secs)}
                     className={cn(
-                      "h-7 flex-1 rounded-md border text-xs font-medium transition-colors",
-                      settings.inspectionSecs === secs
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
+                      settings.inspectionSecs === secs && "is-active",
                     )}
                   >
                     {secs === null ? "Off" : `${secs}s`}
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Show cube net */}
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-foreground">
-              Show scramble diagram
-            </p>
+          <section className="timer-settings-toggle">
+            <p>Scramble diagram</p>
             <button
               type="button"
               role="switch"
               aria-checked={settings.showCubeNet}
               onClick={() => set("showCubeNet", !settings.showCubeNet)}
-              className={cn(
-                "relative h-5 w-9 rounded-full transition-colors",
-                settings.showCubeNet ? "bg-foreground" : "bg-border",
-              )}
+              className={cn("timer-switch", settings.showCubeNet && "is-on")}
             >
-              <span
-                className={cn(
-                  "absolute top-0.5 h-4 w-4 rounded-full bg-background shadow-sm transition-transform",
-                  settings.showCubeNet ? "translate-x-4" : "translate-x-0.5",
-                )}
-              />
+              <span />
             </button>
-          </div>
+          </section>
         </div>
       </div>
     </div>
